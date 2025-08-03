@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 st.set_page_config(
@@ -37,3 +36,4 @@ text-align: center;
 </div>
 """
 st.markdown(footer,unsafe_allow_html=True)
+
