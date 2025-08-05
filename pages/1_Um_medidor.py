@@ -14,6 +14,11 @@ st.set_page_config(
         'About': "Versão 1.0.0. Bugs ou sugestões, enviar um e-mail para joebert.oliveira@energisa.com.br"}
 )
 
+st.logo(
+    "CRITCOM.svg",
+    icon_image="CRITCOM.svg",
+)
+
 # --- FUNÇÕES DE PROCESSAMENTO (NÃO MODIFICAR) ---
 
 def processar_dados_consumo(texto_bruto):
