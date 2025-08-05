@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="https://www.energisa.com.br/sites/energisa/files/Energisa120%20%281%29.ico",
     layout="wide",
     menu_items={
-        'About': "Versão 1.1.0. Bugs ou sugestões, enviar um e-mail para joebert.oliveira@energisa.com.br"}
+        'About': "Versão 1.0.0. Bugs ou sugestões, enviar um e-mail para joebert.oliveira@energisa.com.br"}
 )
 
 # --- FUNÇÕES DE PROCESSAMENTO (NÃO MODIFICAR) ---
@@ -116,7 +116,7 @@ def extrair_info_cliente(texto_bruto):
     if not texto_bruto:
         return info
 
-    contrato_match = re.search(r"Contrato\s+(\d+)", texto_bruto)
+    contrato_match = re.search(r"Cliente \(contrato\)\s+(\d+)", texto_bruto)
     if contrato_match:
         info["contrato"] = contrato_match.group(1)
 
@@ -366,14 +366,15 @@ with col4:
     demanda_novo = st.text_area("Demanda / DRE / ERE (Medidor Novo):", height=200, key="demanda_novo")
 
 # --- Botão Limpar ---
-st.markdown("---")
+
 def clear_all_text():
     st.session_state.consumo_antigo = ""
     st.session_state.demanda_antigo = ""
     st.session_state.consumo_novo = ""
     st.session_state.demanda_novo = ""
 
-st.button("Limpar Dados", key="clear", on_click=clear_all_text)
+st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
+st.markdown("""<style>button[kind="primary"] { background-color: #D9534F !important; color: white !important; border-color: #D43F3A !important; }</style>""", unsafe_allow_html=True)
 
 # --- Seção de Informações do Cliente ---
 info_consumo_antigo = extrair_info_cliente(consumo_antigo)
@@ -431,12 +432,12 @@ if st.button("Calcular Totais"):
     postos = ['Ponta', 'Reservado', 'Fora Ponta']
     
     grandezas_a_processar = [
-        {'key': 'kWh fornecido', 'type': 'consumo', 'label': 'Soma kWh fornecido'},
-        {'key': 'kW fornecido', 'type': 'demanda', 'label': 'Máximo kW fornecido'},
-        {'key': 'UFER', 'type': 'demanda', 'label': 'Soma UFER'},
-        {'key': 'DMCR', 'type': 'demanda', 'label': 'Máximo DMCR'},
-        {'key': 'kWh recebido', 'type': 'consumo', 'label': 'Soma kWh recebido'},
-        {'key': 'kW recebido', 'type': 'demanda', 'label': 'Máximo kW recebido'}
+        {'key': 'kWh fornecido', 'type': 'consumo', 'label': 'kWh fornecido acumulado'},
+        {'key': 'kW fornecido', 'type': 'demanda', 'label': 'kW fornecido máximo'},
+        {'key': 'UFER', 'type': 'demanda', 'label': 'UFER (ERE) acumulado'},
+        {'key': 'DMCR', 'type': 'demanda', 'label': 'DMCR (DRE) máximo'},
+        {'key': 'kWh recebido', 'type': 'consumo', 'label': 'kWh recebido acumulado'},
+        {'key': 'kW recebido', 'type': 'demanda', 'label': 'kW recebido máximo'}
     ]
 
     def get_params(medidor_type, grandeza):
@@ -449,7 +450,7 @@ if st.button("Calcular Totais"):
         perdas_display = 2.5 if perdas_opcao == "Sim" else 0.0
 
         k_value = constante
-        if grandeza.startswith("kW"):
+        if grandeza.startswith("kW "):
             if tipo_opcao == "Grandeza EAC": k_value = constante / 4
             elif tipo_opcao == "Pulso": k_value = constante * 4
         
