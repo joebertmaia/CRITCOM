@@ -115,7 +115,7 @@ def processar_dados_demanda(texto_bruto):
         resultados[nome_coluna]['valores'] = {k: (v if pd.notna(v) else 0.0) for k, v in resultados[nome_coluna]['valores'].items()}
     return resultados, df
 
-# --- NOVA FUNÇÃO PARA EXTRAIR INFORMAÇÕES DO CLIENTE ---
+# --- FUNÇÃO PARA EXTRAIR INFORMAÇÕES DO CLIENTE ---
 def extrair_info_cliente(texto_bruto):
     info = {"contrato": "Não encontrado", "serial": "Não encontrado"}
     if not texto_bruto:
@@ -139,9 +139,26 @@ def extrair_info_cliente(texto_bruto):
 def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
     """Exibe o DataFrame de resultados e gráficos dentro de um diálogo."""
     
-    table_html = df_resultados.to_html(index=False, escape=False, na_rep='')
+    # --- Geração Manual da Tabela HTML ---
+    header_html = "<thead><tr>"
+    for col_name in df_resultados.columns:
+        header_html += f'<th>{col_name}</th>'
+    header_html += "</tr></thead>"
+
+    body_html = "<tbody>"
+    for _, row in df_resultados.iterrows():
+        if str(row.iloc[0]).startswith('---'):
+            body_html += f'<tr class="separator-row"><td colspan="{len(df_resultados.columns)}">{row.iloc[0]}</td></tr>'
+        else:
+            body_html += "<tr>"
+            for cell_value in row:
+                body_html += f'<td>{cell_value}</td>'
+            body_html += "</tr>"
+    body_html += "</tbody>"
+
+    table_html = f"<table>{header_html}{body_html}</table>"
     
-    # Prepara dados para os gráficos de consumo
+    # Prepara dados para os gráficos
     chart_data_consumo_fornecido = None
     if df_consumo_raw is not None and 'kWh fornecido' in df_consumo_raw.columns:
         df_fornecido = df_consumo_raw[['DataHora', 'kWh fornecido']].dropna()
@@ -154,7 +171,6 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
         df_recebido['DataHora'] = df_recebido['DataHora'].apply(lambda x: x.isoformat())
         chart_data_consumo_recebido = df_recebido.to_dict(orient='records')
 
-    # Prepara dados para os gráficos de demanda
     chart_data_demanda_fornecido = None
     if df_demanda_raw is not None and 'kW fornecido' in df_demanda_raw.columns:
         df_dem_fornecido = df_demanda_raw[['DataHora', 'kW fornecido']].dropna()
@@ -173,6 +189,12 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
         df_dmcr['DataHora'] = df_dmcr['DataHora'].apply(lambda x: x.isoformat())
         chart_data_dmcr = df_dmcr.to_dict(orient='records')
 
+    chart_data_ufer = None
+    if df_demanda_raw is not None and 'UFER' in df_demanda_raw.columns:
+        df_ufer = df_demanda_raw[['DataHora', 'UFER']].dropna()
+        df_ufer['DataHora'] = df_ufer['DataHora'].apply(lambda x: x.isoformat())
+        chart_data_ufer = df_ufer.to_dict(orient='records')
+
     # Cria o componente HTML com a tabela, os gráficos e a função de cópia
     components.html(f"""
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -183,16 +205,22 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
         <style>
             .capture-area {{ padding: 10px; background-color: #ffffff; }}
             table {{ width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 14px; margin-bottom: 20px; }}
-            th, td {{ border: 1px solid #e0e0e0; padding: 8px; text-align: left; }}
+            th, td {{ border: 1px solid #e0e0e0; padding: 8px; text-align: center; }}
             th {{ background-color: #f0f2f6; }}
             .button-container {{ text-align: right; margin-top: 10px; margin-bottom: 20px; }}
             .copy-button {{ background-color: #0068c9; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }}
             .copy-button:hover {{ background-color: #0055a3; }}
             h3 {{ font-family: sans-serif; }}
+            tr.separator-row td {{
+                text-align: center;
+                font-weight: bold;
+                background-color: #e8e8e8;
+                border-left: 1px solid #e0e0e0;
+                border-right: 1px solid #e0e0e0;
+            }}
         </style>
         
         <div id="captureTable" class="capture-area">
-            <h3>Tabela de Resultados</h3>
             {table_html}
         </div>
         <div class="button-container">
@@ -210,6 +238,7 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
             const chartDataDemandaFornecido = {json.dumps(chart_data_demanda_fornecido)};
             const chartDataDemandaRecebido = {json.dumps(chart_data_demanda_recebido)};
             const chartDataDmcr = {json.dumps(chart_data_dmcr)};
+            const chartDataUfer = {json.dumps(chart_data_ufer)};
 
             function createChart(containerId, chartInstanceVar, chartTitle, datasets) {{
                 if (datasets.length === 0) return;
@@ -249,6 +278,7 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
             if (chartDataDemandaFornecido) demandaDatasets.push({{ label: 'kW fornecido', data: chartDataDemandaFornecido.map(item => ({{x: new Date(item.DataHora), y: item['kW fornecido']}})), borderColor: 'rgb(54, 162, 235)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
             if (chartDataDemandaRecebido) demandaDatasets.push({{ label: 'kW recebido', data: chartDataDemandaRecebido.map(item => ({{x: new Date(item.DataHora), y: item['kW recebido']}})), borderColor: 'rgb(255, 159, 64)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
             if (chartDataDmcr) demandaDatasets.push({{ label: 'DMCR', data: chartDataDmcr.map(item => ({{x: new Date(item.DataHora), y: item['DMCR']}})), borderColor: 'rgb(153, 102, 255)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            if (chartDataUfer) demandaDatasets.push({{ label: 'UFER', data: chartDataUfer.map(item => ({{x: new Date(item.DataHora), y: item['UFER']}})), borderColor: 'rgb(75, 192, 75)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
             createChart('demandaChartContainer', 'demandaChart', 'Gráfico - Demanda', demandaDatasets);
 
             function copyChartAsImage(chartInstanceVar, button) {{
@@ -358,7 +388,7 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
                 }});
             }}
         </script>
-    """, height=800, scrolling=True)
+    """, height=700, scrolling=True)
 
     if st.button("Fechar", key="close_dialog"):
         st.rerun()
@@ -401,9 +431,9 @@ if consumo_injecao or kW_kwinj_dre_ere:
 
     if consumo_injecao and kW_kwinj_dre_ere:
         if info_consumo['contrato'] != "Não encontrado" and info_demanda['contrato'] != "Não encontrado" and info_consumo['contrato'] != info_demanda['contrato']:
-            st.warning(f"Atenção: O número do contrato é diferente entre os dois relatórios ({info_consumo['contrato']} vs {info_demanda['contrato']}).")
+            st.warning(f":x: Atenção: O número do contrato é diferente entre os dois relatórios ({info_consumo['contrato']} vs {info_demanda['contrato']}).")
         if info_consumo['serial'] != "Não encontrado" and info_demanda['serial'] != "Não encontrado" and info_consumo['serial'] != info_demanda['serial']:
-            st.warning(f"Atenção: O número de série do medidor é diferente entre os dois relatórios ({info_consumo['serial']} vs {info_demanda['serial']}).")
+            st.warning(f":x: Atenção: O número do medidor é diferente entre os dois relatórios ({info_consumo['serial']} vs {info_demanda['serial']}).")
 
 st.markdown("---")
 
@@ -420,19 +450,9 @@ with col_const:
         format="%.4f"
     )
 with col_tipo:
-    tipo_opcao = st.radio(
-        "Tipo:",
-        ("Grandeza", "Grandeza EAC", "Pulso"),
-        horizontal=True,
-        key="tipo"
-    )
+    tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=False,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
 with col_perdas:
-    perdas_opcao = st.radio(
-        "Adicionar Perdas?",
-        ("Não", "Sim"),
-        horizontal=True,
-        key="perdas"
-    )
+    perdas_opcao = st.radio("Adicionar Perdas?",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
 # --- Botão e Lógica de Processamento ---
 if st.button("Calcular Totais"):
@@ -462,7 +482,7 @@ if st.button("Calcular Totais"):
     constante_outros = constante
 
     def create_separator(label):
-        return {'Descrição': f"--- {label} ---", 'Valor Calculado': '', 'K': '', 'Perdas (%)': '', 'Valor Final': ''}
+        return {'Posto Horário': f"--- {label} ---", 'Valor': '', 'K': '', 'Perdas (%)': '', 'Valor Final': ''}
 
     def add_demanda_section(key, label, k_value_to_use):
         if resultados_demanda and key in resultados_demanda:
@@ -471,8 +491,8 @@ if st.button("Calcular Totais"):
             for posto in postos:
                 valor = dados['valores'].get(posto, 0.0)
                 table_data.append({
-                    'Descrição': posto,
-                    'Valor Calculado': valor,
+                    'Posto Horário': posto,
+                    'Valor': valor,
                     'K': k_value_to_use,
                     'Perdas (%)': perdas_display_value,
                     'Valor Final': valor * k_value_to_use * perdas_multiplier
@@ -487,8 +507,8 @@ if st.button("Calcular Totais"):
             for posto in postos:
                 valor = dados['valores'].get(posto, 0.0)
                 table_data.append({
-                    'Descrição': posto,
-                    'Valor Calculado': valor,
+                    'Posto Horário': posto,
+                    'Valor': valor,
                     'K': constante_outros,
                     'Perdas (%)': perdas_display_value,
                     'Valor Final': valor * constante_outros * perdas_multiplier
@@ -507,8 +527,8 @@ if st.button("Calcular Totais"):
                 for posto in postos:
                     valor = dados['valores'].get(posto, 0.0)
                     table_data.append({
-                        'Descrição': posto,
-                        'Valor Calculado': valor,
+                        'Posto Horário': posto,
+                        'Valor': valor,
                         'K': constante_outros,
                         'Perdas (%)': perdas_display_value,
                         'Valor Final': valor * constante_outros * perdas_multiplier
@@ -525,7 +545,7 @@ if st.button("Calcular Totais"):
                 return f"{value:,.{precision}f}".replace(',', 'X').replace('.', ',').replace('X', '.')
             return value
 
-        df_resultados['Valor Calculado'] = df_resultados['Valor Calculado'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)
+        df_resultados['Valor'] = df_resultados['Valor'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)
         df_resultados['K'] = df_resultados['K'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)
         df_resultados['Perdas (%)'] = df_resultados['Perdas (%)'].apply(lambda x: format_br(x, 1) if isinstance(x, (int, float)) else x)
         df_resultados['Valor Final'] = df_resultados['Valor Final'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)

@@ -141,9 +141,9 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
     
     # --- Geração Manual da Tabela HTML ---
     header_html = "<thead>"
-    header_html += '<tr><th rowspan="2">Descrição</th><th colspan="4" style="text-align: center;">Medidor Antigo</th><th colspan="4" style="text-align: center;">Medidor Novo</th><th rowspan="2">Sumarização</th></tr>'
+    header_html += '<tr><th rowspan="2">Posto Horário</th><th colspan="4" style="text-align: center;">Medidor Anterior</th><th colspan="4" style="text-align: center;">Medidor Novo</th><th rowspan="2">Sumarização</th></tr>'
     header_html += "<tr>"
-    col_names = ['Valor calculado', 'K', 'Perdas (%)', 'Valor final']
+    col_names = ['Valor', 'K', 'Perdas (%)', 'Valor Final']
     header_html += "".join(f'<th>{name}</th>' for name in col_names)
     header_html += "".join(f'<th>{name}</th>' for name in col_names)
     header_html += "</tr></thead>"
@@ -217,15 +217,14 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
         </style>
         
         <div id="captureTable" class="capture-area">
-            <h3>Tabela de Resultados</h3>
             {table_html}
         </div>
         <div class="button-container">
             <button class="copy-button" onclick="copyElementAsImage('captureTable', this)">Copiar Tabela como Imagem</button>
         </div>
 
-        <div id="consumoChartContainerAntigo"></div>
-        <div id="demandaChartContainerAntigo"></div>
+        <div id="consumoChartContainerAnterior"></div>
+        <div id="demandaChartContainerAnterior"></div>
         <div id="consumoChartContainerNovo"></div>
         <div id="demandaChartContainerNovo"></div>
 
@@ -252,17 +251,17 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
             }}
 
             // Cria gráficos
-            const consumoDatasetsAntigo = [];
-            if (chartData.consumo_fornecido_antigo) consumoDatasetsAntigo.push({{ label: 'kWh fornecido', data: chartData.consumo_fornecido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kWh fornecido']}})), borderColor: 'rgb(75, 192, 192)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            if (chartData.consumo_recebido_antigo) consumoDatasetsAntigo.push({{ label: 'kWh recebido', data: chartData.consumo_recebido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kWh recebido']}})), borderColor: 'rgb(255, 99, 132)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            createChart('consumoChartContainerAntigo', 'consumoChartAntigo', 'Gráfico - Consumo (Medidor Antigo)', consumoDatasetsAntigo);
+            const consumoDatasetsAnterior = [];
+            if (chartData.consumo_fornecido_antigo) consumoDatasetsAnterior.push({{ label: 'kWh fornecido', data: chartData.consumo_fornecido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kWh fornecido']}})), borderColor: 'rgb(75, 192, 192)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            if (chartData.consumo_recebido_antigo) consumoDatasetsAnterior.push({{ label: 'kWh recebido', data: chartData.consumo_recebido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kWh recebido']}})), borderColor: 'rgb(255, 99, 132)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            createChart('consumoChartContainerAnterior', 'consumoChartAnterior', 'Gráfico - Consumo (Medidor Anterior)', consumoDatasetsAnterior);
 
-            const demandaDatasetsAntigo = [];
-            if (chartData.demanda_fornecido_antigo) demandaDatasetsAntigo.push({{ label: 'kW fornecido', data: chartData.demanda_fornecido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kW fornecido']}})), borderColor: 'rgb(54, 162, 235)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            if (chartData.demanda_recebido_antigo) demandaDatasetsAntigo.push({{ label: 'kW recebido', data: chartData.demanda_recebido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kW recebido']}})), borderColor: 'rgb(255, 159, 64)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            if (chartData.dmcr_antigo) demandaDatasetsAntigo.push({{ label: 'DMCR', data: chartData.dmcr_antigo.map(item => ({{x: new Date(item.DataHora), y: item['DMCR']}})), borderColor: 'rgb(153, 102, 255)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            if (chartData.ufer_antigo) demandaDatasetsAntigo.push({{ label: 'UFER', data: chartData.ufer_antigo.map(item => ({{x: new Date(item.DataHora), y: item['UFER']}})), borderColor: 'rgb(75, 192, 75)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
-            createChart('demandaChartContainerAntigo', 'demandaChartAntigo', 'Gráfico - Demanda (Medidor Antigo)', demandaDatasetsAntigo);
+            const demandaDatasetsAnterior = [];
+            if (chartData.demanda_fornecido_antigo) demandaDatasetsAnterior.push({{ label: 'kW fornecido', data: chartData.demanda_fornecido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kW fornecido']}})), borderColor: 'rgb(54, 162, 235)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            if (chartData.demanda_recebido_antigo) demandaDatasetsAnterior.push({{ label: 'kW recebido', data: chartData.demanda_recebido_antigo.map(item => ({{x: new Date(item.DataHora), y: item['kW recebido']}})), borderColor: 'rgb(255, 159, 64)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            if (chartData.dmcr_antigo) demandaDatasetsAnterior.push({{ label: 'DMCR', data: chartData.dmcr_antigo.map(item => ({{x: new Date(item.DataHora), y: item['DMCR']}})), borderColor: 'rgb(153, 102, 255)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            if (chartData.ufer_antigo) demandaDatasetsAnterior.push({{ label: 'UFER', data: chartData.ufer_antigo.map(item => ({{x: new Date(item.DataHora), y: item['UFER']}})), borderColor: 'rgb(75, 192, 75)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
+            createChart('demandaChartContainerAnterior', 'demandaChartAnterior', 'Gráfico - Demanda (Medidor Anterior)', demandaDatasetsAnterior);
 
             const consumoDatasetsNovo = [];
             if (chartData.consumo_fornecido_novo) consumoDatasetsNovo.push({{ label: 'kWh fornecido', data: chartData.consumo_fornecido_novo.map(item => ({{x: new Date(item.DataHora), y: item['kWh fornecido']}})), borderColor: 'rgb(75, 192, 192)', tension: 0.1, pointRadius: 0, borderWidth: 2 }});
@@ -347,7 +346,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
                 }});
             }}
         </script>
-    """, height=800, scrolling=True)
+    """, height=700, scrolling=True)
 
     if st.button("Fechar", key="close_dialog"):
         st.rerun()
@@ -356,12 +355,12 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
 st.title("Confirmação para 2 medidores")
 st.markdown("""<style>[aria-label="dialog"]{width: 1100px;}</style>""", unsafe_allow_html=True)
 
-st.subheader("Medidor Antigo")
+st.subheader("Medidor Anterior")
 col1, col2 = st.columns(2)
 with col1:
-    consumo_antigo = st.text_area("Consumo / Injeção (Medidor Antigo):", height=200, key="consumo_antigo")
+    consumo_antigo = st.text_area("Consumo / Injeção (Medidor Anterior):", height=200, key="consumo_antigo")
 with col2:
-    demanda_antigo = st.text_area("Demanda / DRE / ERE (Medidor Antigo):", height=200, key="demanda_antigo")
+    demanda_antigo = st.text_area("Demanda / DRE / ERE (Medidor Anterior):", height=200, key="demanda_antigo")
 
 st.subheader("Medidor Novo")
 col3, col4 = st.columns(2)
@@ -392,23 +391,23 @@ if any([consumo_antigo, demanda_antigo, consumo_novo, demanda_novo]):
     st.subheader("Informações de Medição Extraídas")
     col_info1, col_info2 = st.columns(2)
     with col_info1:
-        st.markdown("<h6>Medidor Antigo</h6>", unsafe_allow_html=True)
+        st.markdown("<h6>Medidor Anterior</h6>", unsafe_allow_html=True)
         st.text(f"Contrato: {info_consumo_antigo['contrato']} (Consumo) / {info_demanda_antigo['contrato']} (Demanda)")
         st.text(f"Serial: {info_consumo_antigo['serial']} (Consumo) / {info_demanda_antigo['serial']} (Demanda)")
         if consumo_antigo and demanda_antigo:
             if info_consumo_antigo['contrato'] != "Não encontrado" and info_demanda_antigo['contrato'] != "Não encontrado" and info_consumo_antigo['contrato'] != info_demanda_antigo['contrato']:
-                st.warning("Atenção: Contratos do medidor antigo são diferentes.")
+                st.warning(":x: Atenção: Contratos do medidor antigo são diferentes.")
             if info_consumo_antigo['serial'] != "Não encontrado" and info_demanda_antigo['serial'] != "Não encontrado" and info_consumo_antigo['serial'] != info_demanda_antigo['serial']:
-                st.warning("Atenção: Seriais do medidor antigo são diferentes.")
+                st.warning(":x: Atenção: Seriais do medidor antigo são diferentes.")
     with col_info2:
         st.markdown("<h6>Medidor Novo</h6>", unsafe_allow_html=True)
         st.text(f"Contrato: {info_consumo_novo['contrato']} (Consumo) / {info_demanda_novo['contrato']} (Demanda)")
         st.text(f"Serial: {info_consumo_novo['serial']} (Consumo) / {info_demanda_novo['serial']} (Demanda)")
         if consumo_novo and demanda_novo:
             if info_consumo_novo['contrato'] != "Não encontrado" and info_demanda_novo['contrato'] != "Não encontrado" and info_consumo_novo['contrato'] != info_demanda_novo['contrato']:
-                st.warning("Atenção: Contratos do medidor novo são diferentes.")
+                st.warning(":x: Atenção: Contratos do medidor novo são diferentes.")
             if info_consumo_novo['serial'] != "Não encontrado" and info_demanda_novo['serial'] != "Não encontrado" and info_consumo_novo['serial'] != info_demanda_novo['serial']:
-                st.warning("Atenção: Seriais do medidor novo são diferentes.")
+                st.warning(":x: Atenção: Seriais do medidor novo são diferentes.")
 
 st.markdown("---")
 
@@ -416,15 +415,15 @@ st.markdown("---")
 st.header("Parâmetros de Cálculo")
 param1, param2 = st.columns(2)
 with param1:
-    st.subheader("Medidor Antigo")
+    st.subheader("Medidor Anterior")
     constante_antigo = st.number_input("Constante:", min_value=0.0, value=1.0, step=0.01, format="%.4f", key="const_antigo")
-    tipo_opcao_antigo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_antigo")
-    perdas_opcao_antigo = st.radio("Perdas?", ("Não", "Sim"), horizontal=True, key="perdas_antigo")
+    tipo_opcao_antigo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_antigo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+    perdas_opcao_antigo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_antigo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 with param2:
     st.subheader("Medidor Novo")
     constante_novo = st.number_input("Constante:", min_value=0.0, value=1.0, step=0.01, format="%.4f", key="const_novo")
-    tipo_opcao_novo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_novo")
-    perdas_opcao_novo = st.radio("Perdas?", ("Não", "Sim"), horizontal=True, key="perdas_novo")
+    tipo_opcao_novo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_novo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+    perdas_opcao_novo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_novo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
 # --- Botão de Calcular ---
 if st.button("Calcular Totais"):
@@ -475,7 +474,7 @@ if st.button("Calcular Totais"):
         existe_novo = res_novo and grandeza in res_novo
         
         if existe_antigo or existe_novo:
-            table_data.append({'Descrição': f"--- {label} ---"})
+            table_data.append({'Posto Horário': f"--- {label} ---"})
             for posto in postos:
                 val_antigo = res_antigo[grandeza]['valores'].get(posto, 0.0) if existe_antigo else 0.0
                 k_antigo, perdas_antigo_display, perdas_antigo_mult = get_params('antigo', grandeza)
@@ -488,7 +487,7 @@ if st.button("Calcular Totais"):
                 sumarizacao = get_sumarizacao(grandeza, final_antigo, final_novo)
 
                 table_data.append({
-                    'Descrição': posto,
+                    'Posto Horário': posto,
                     'Valor calculado (antigo)': val_antigo, 'K (antigo)': k_antigo, 'Perdas (%) (antigo)': perdas_antigo_display, 'Valor final (antigo)': final_antigo,
                     'Valor calculado (novo)': val_novo, 'K (novo)': k_novo, 'Perdas (%) (novo)': perdas_novo_display, 'Valor final (novo)': final_novo,
                     'Sumarização': sumarizacao
