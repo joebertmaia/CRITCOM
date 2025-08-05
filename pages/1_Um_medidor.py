@@ -364,18 +364,18 @@ st.title("Confirmação para 1 medidor")
 dados1, dados2 = st.columns(2)
 with dados1:
     consumo_injecao = st.text_area(
-        "Dê um Ctrl-A na página de consumo/injeção e cole aqui:",
-        height=300,
-        placeholder="Cole o texto aqui...",
-        key="consumo_injecao"
-    )
+        "Dê um Ctrl-A na página de consumo/injeção e cole aqui:", height=200, placeholder="Cole o texto aqui...", key="consumo_injecao")
 with dados2:
-    kW_kwinj_dre_ere = st.text_area(
-        "Dê um Ctrl-A na página de demanda/DRE/ERE e cole aqui:",
-        height=300,
-        placeholder="Cole o texto aqui...",
-        key="kW_kwinj_dre_ere"
-    )
+    kW_kwinj_dre_ere = st.text_area("Dê um Ctrl-A na página de demanda/DRE/ERE e cole aqui:", height=200, placeholder="Cole o texto aqui...", key="kW_kwinj_dre_ere")
+
+# --- Botão Limpar ---
+
+def clear_all_text():
+    st.session_state.consumo_injecao = ""
+    st.session_state.kW_kwinj_dre_ere = ""
+
+st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
+st.markdown("""<style>button[kind="primary"] { background-color: #D9534F !important; color: white !important; border-color: #D43F3A !important; }</style>""", unsafe_allow_html=True)
 
 # --- Seção de Informações do Cliente ---
 info_consumo = extrair_info_cliente(consumo_injecao)
@@ -444,7 +444,7 @@ if st.button("Calcular Totais"):
 
     # --- Lógica para criar a tabela de resultados ---
     table_data = []
-    postos = ['Ponta', 'Fora Ponta', 'Reservado']
+    postos = ['Ponta', 'Reservado', 'Fora Ponta']
     
     perdas_multiplier = 1.025 if perdas_opcao == "Sim" else 1.0
     perdas_display_value = 2.5 if perdas_opcao == "Sim" else 0.0
