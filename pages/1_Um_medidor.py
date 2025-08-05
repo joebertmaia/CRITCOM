@@ -452,7 +452,7 @@ with col_const:
 with col_tipo:
     tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=False,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
 with col_perdas:
-    perdas_opcao = st.radio("Adicionar Perdas?",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+    perdas_opcao = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
 # --- Botão e Lógica de Processamento ---
 if st.button("Calcular Totais"):
