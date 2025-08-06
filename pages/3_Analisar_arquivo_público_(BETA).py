@@ -169,7 +169,7 @@ def processar_memoria_massa(file_content_raw, params, grandezas_legend):
     df['Posto Horário'] = df['Timestamp'].apply(get_posto)
 
     # Adiciona colunas de grandezas calculadas
-    final_cols_order = ['Data', 'Hora']
+    final_cols_order = ['Timestamp', 'Data', 'Hora'] # Mantém o Timestamp para o filtro
     grandezas_params = params.filter(like='grandeza_').iloc[0]
 
     for i, g_code in enumerate(grandezas_params):
@@ -422,54 +422,93 @@ st.markdown("Faça o upload de um arquivo de memória de massa (formato texto) p
 
 uploaded_file = st.file_uploader("Escolha um arquivo", label_visibility="collapsed")
 
+if "analysis_done" not in st.session_state:
+    st.session_state.analysis_done = False
+
 if uploaded_file is not None:
     if st.button("Analisar Arquivo"):
         try:
             string_data = uploaded_file.getvalue().decode('latin-1')
             
             with st.spinner("Processando arquivo..."):
-                df_parametros, grandezas_legend = processar_parametros_gerais(string_data)
-                df_mm = processar_memoria_massa(string_data, df_parametros, grandezas_legend)
-                df_faltas, df_alteracoes = processar_alteracoes_e_faltas(string_data)
-
-            st.success("Arquivo processado com sucesso!")
-            
-            tab1, tab2 = st.tabs(["Parâmetros Gerais", "Análise de MM"])
-
-            with tab1:
-                display_parametros_layout(df_parametros, grandezas_legend)
-                display_faltas_energia(df_faltas)
-                
-                st.markdown("---")
-                st.subheader("Alterações Registradas")
-                df_alteracoes_vis = df_alteracoes.drop(columns=['Medidor'])
-                if not df_alteracoes_vis.empty:
-                    st.dataframe(df_alteracoes_vis, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Nenhuma alteração registrada no arquivo.")
-            
-            with tab2:
-                st.subheader("Análise de Memória de Massa")
-                if not df_mm.empty:
-                    with st.expander("Ver dados detalhados da Memória de Massa"):
-                        st.dataframe(df_mm, use_container_width=True)
-                    
-                    # Sumarização
-                    st.markdown("---")
-                    st.markdown("**Consumo Sumarizado por Posto Horário**")
-                    
-                    grandeza_c1_code = df_parametros['grandeza_1o_canal'].iloc[0]
-                    grandeza_c1_name = grandezas_legend.get(grandeza_c1_code)
-
-                    if grandeza_c1_name and grandeza_c1_name in df_mm.columns:
-                        summary = df_mm.groupby('Posto Horário')[grandeza_c1_name].sum().reset_index()
-                        st.dataframe(summary, use_container_width=True, hide_index=True)
-                    else:
-                        st.info(f"A grandeza do Canal 1 ({grandeza_c1_name or 'N/A'}) não é apropriada para sumarização ou não foi encontrada.")
-
-                else:
-                    st.warning("Não foi possível processar os dados da Memória de Massa (linhas 'SALV'/'CONT').")
+                st.session_state.df_parametros, st.session_state.grandezas_legend = processar_parametros_gerais(string_data)
+                st.session_state.df_mm = processar_memoria_massa(string_data, st.session_state.df_parametros, st.session_state.grandezas_legend)
+                st.session_state.df_faltas, st.session_state.df_alteracoes = processar_alteracoes_e_faltas(string_data)
+                st.session_state.analysis_done = True
 
         except Exception as e:
             st.error(f"Ocorreu um erro geral ao processar o arquivo: {e}")
             st.error("Verifique se o arquivo está no formato ABNT correto e não está corrompido.")
+            st.session_state.analysis_done = False
+
+if st.session_state.analysis_done:
+    tab1, tab2 = st.tabs(["Parâmetros Gerais", "Análise de MM"])
+
+    with tab1:
+        display_parametros_layout(st.session_state.df_parametros, st.session_state.grandezas_legend)
+        display_faltas_energia(st.session_state.df_faltas)
+        
+        st.markdown("---")
+        st.subheader("Alterações Registradas")
+        df_alteracoes_vis = st.session_state.df_alteracoes.drop(columns=['Medidor'])
+        if not df_alteracoes_vis.empty:
+            st.dataframe(df_alteracoes_vis, use_container_width=True, hide_index=True)
+        else:
+            st.info("Nenhuma alteração registrada no arquivo.")
+    
+    with tab2:
+        st.subheader("Análise de Memória de Massa")
+        if not st.session_state.df_mm.empty:
+            
+            # --- Slider de Data ---
+            min_ts = st.session_state.df_mm['Timestamp'].min()
+            max_ts = st.session_state.df_mm['Timestamp'].max()
+            
+            if min_ts != max_ts:
+                selected_range = st.slider(
+                    'Filtre o período para análise:',
+                    min_value=min_ts.to_pydatetime(),
+                    max_value=max_ts.to_pydatetime(),
+                    value=(min_ts.to_pydatetime(), max_ts.to_pydatetime()),
+                    format="DD/MM/YYYY - HH:mm"
+                )
+                start_ts, end_ts = selected_range
+            else:
+                start_ts, end_ts = min_ts, max_ts
+
+            df_mm_filtrado = st.session_state.df_mm[
+                (st.session_state.df_mm['Timestamp'] >= start_ts) & 
+                (st.session_state.df_mm['Timestamp'] <= end_ts)
+            ]
+
+            with st.expander("Ver dados detalhados da Memória de Massa (filtrado)"):
+                st.dataframe(df_mm_filtrado.drop(columns=['Timestamp']), use_container_width=True)
+            
+            # Sumarização
+            st.markdown("---")
+            st.markdown("**Consumo Sumarizado por Posto Horário (filtrado)**")
+            
+            grandeza_c1_code = st.session_state.df_parametros['grandeza_1o_canal'].iloc[0]
+            grandeza_c1_name = st.session_state.grandezas_legend.get(grandeza_c1_code)
+
+            if grandeza_c1_name and grandeza_c1_name in df_mm_filtrado.columns:
+                summary = df_mm_filtrado.groupby('Posto Horário')[grandeza_c1_name].sum().to_dict()
+                
+                ponta_val = summary.get('Ponta', 0) / 12
+                fponta_val = summary.get('Fora Ponta', 0) / 12
+                res_val = summary.get('Reservado', 0) / 12
+
+                cols = st.columns(3)
+                with cols[0]:
+                    st.markdown(create_metric_card(f"Consumo Ponta ({grandeza_c1_name})", f"{ponta_val:,.0f}"), unsafe_allow_html=True)
+                with cols[1]:
+                    st.markdown(create_metric_card(f"Consumo Fora Ponta ({grandeza_c1_name})", f"{fponta_val:,.0f}"), unsafe_allow_html=True)
+                if res_val > 0:
+                    with cols[2]:
+                        st.markdown(create_metric_card(f"Consumo Reservado ({grandeza_c1_name})", f"{res_val:,.0f}"), unsafe_allow_html=True)
+
+            else:
+                st.info(f"A grandeza do Canal 1 ({grandeza_c1_name or 'N/A'}) não é apropriada para sumarização ou não foi encontrada.")
+
+        else:
+            st.warning("Não foi possível processar os dados da Memória de Massa (linhas 'SALV'/'CONT').")
