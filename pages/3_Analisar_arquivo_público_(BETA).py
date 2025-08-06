@@ -463,6 +463,7 @@ if st.session_state.analysis_done:
             # --- Slider de Data ---
             min_ts = st.session_state.df_mm['Timestamp'].min()
             max_ts = st.session_state.df_mm['Timestamp'].max()
+            intervalo_minutos = int(st.session_state.df_parametros['intervalo_mm'].iloc[0])
             
             if min_ts != max_ts:
                 selected_range = st.slider(
@@ -470,7 +471,8 @@ if st.session_state.analysis_done:
                     min_value=min_ts.to_pydatetime(),
                     max_value=max_ts.to_pydatetime(),
                     value=(min_ts.to_pydatetime(), max_ts.to_pydatetime()),
-                    format="DD/MM/YYYY - HH:mm"
+                    format="DD/MM/YYYY - HH:mm",
+                    step=timedelta(minutes=intervalo_minutos)
                 )
                 start_ts, end_ts = selected_range
             else:
@@ -494,18 +496,18 @@ if st.session_state.analysis_done:
             if grandeza_c1_name and grandeza_c1_name in df_mm_filtrado.columns:
                 summary = df_mm_filtrado.groupby('Posto Horário')[grandeza_c1_name].sum().to_dict()
                 
-                ponta_val = summary.get('Ponta', 0) / 12
-                fponta_val = summary.get('Fora Ponta', 0) / 12
-                res_val = summary.get('Reservado', 0) / 12
+                ponta_val = (summary.get('Ponta', 0) / 12) / 1000
+                fponta_val = (summary.get('Fora Ponta', 0) / 12) / 1000
+                res_val = (summary.get('Reservado', 0) / 12) / 1000
 
                 cols = st.columns(3)
                 with cols[0]:
-                    st.markdown(create_metric_card(f"Consumo Ponta ({grandeza_c1_name})", f"{ponta_val:,.0f}"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("Consumo Ponta (kWh)", f"{ponta_val:,.3f}".replace(",", "X").replace(".", ",").replace("X", ".")), unsafe_allow_html=True)
                 with cols[1]:
-                    st.markdown(create_metric_card(f"Consumo Fora Ponta ({grandeza_c1_name})", f"{fponta_val:,.0f}"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("Consumo Fora Ponta (kWh)", f"{fponta_val:,.3f}".replace(",", "X").replace(".", ",").replace("X", ".")), unsafe_allow_html=True)
                 if res_val > 0:
                     with cols[2]:
-                        st.markdown(create_metric_card(f"Consumo Reservado ({grandeza_c1_name})", f"{res_val:,.0f}"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card(f"Consumo Reservado (kWh)", f"{res_val:,.3f}".replace(",", "X").replace(".", ",").replace("X", ".")), unsafe_allow_html=True)
 
             else:
                 st.info(f"A grandeza do Canal 1 ({grandeza_c1_name or 'N/A'}) não é apropriada para sumarização ou não foi encontrada.")
