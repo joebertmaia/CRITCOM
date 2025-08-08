@@ -136,12 +136,13 @@ def extrair_info_cliente(texto_bruto):
 
 # --- Função que define o conteúdo do diálogo ---
 @st.dialog("Resultados do Cálculo")
-def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_consumo_novo, df_demanda_novo):
+def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_consumo_novo, df_demanda_novo, contrato, serial_antigo, serial_novo):
     """Exibe o DataFrame de resultados e gráficos dentro de um diálogo."""
     
     # --- Geração Manual da Tabela HTML ---
+    title_html = f"<h3>Resultados para o Contrato: {contrato}</h3>" if contrato else ""
     header_html = "<thead>"
-    header_html += '<tr><th rowspan="2">Posto Horário</th><th colspan="4" style="text-align: center;">Medidor Anterior</th><th colspan="4" style="text-align: center;">Medidor Novo</th><th rowspan="2">Sumarização</th></tr>'
+    header_html += f'<tr><th rowspan="2">Posto Horário</th><th colspan="4" style="text-align: center;">Medidor Anterior ({serial_antigo})</th><th colspan="4" style="text-align: center;">Medidor Novo ({serial_novo})</th><th rowspan="2">Sumarização</th></tr>'
     header_html += "<tr>"
     col_names = ['Valor', 'K', 'Perdas (%)', 'Valor Final']
     header_html += "".join(f'<th>{name}</th>' for name in col_names)
@@ -201,7 +202,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
             .button-container {{ text-align: right; margin-top: 10px; margin-bottom: 20px; }}
             .copy-button {{ background-color: #0068c9; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }}
             .copy-button:hover {{ background-color: #0055a3; }}
-            h3 {{ font-family: sans-serif; }}
+            h3 {{ font-family: sans-serif; text-align: center;}}
             
             /* Estilos para a tabela */
             th.thick-border-right, td.thick-border-right {{
@@ -217,6 +218,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
         </style>
         
         <div id="captureTable" class="capture-area">
+            {title_html}
             {table_html}
         </div>
         <div class="button-container">
@@ -355,64 +357,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
 st.title("Confirmação para 2 medidores")
 st.markdown("""<style>[aria-label="dialog"]{width: 1100px;}</style>""", unsafe_allow_html=True)
 
-st.subheader("Medidor Anterior")
-col1, col2 = st.columns(2)
-with col1:
-    consumo_antigo = st.text_area("Consumo / Injeção (Medidor Anterior):", height=200, key="consumo_antigo")
-with col2:
-    demanda_antigo = st.text_area("Demanda / DRE / ERE (Medidor Anterior):", height=200, key="demanda_antigo")
-
-st.subheader("Medidor Novo")
-col3, col4 = st.columns(2)
-with col3:
-    consumo_novo = st.text_area("Consumo / Injeção (Medidor Novo):", height=200, key="consumo_novo")
-with col4:
-    demanda_novo = st.text_area("Demanda / DRE / ERE (Medidor Novo):", height=200, key="demanda_novo")
-
-# --- Botão Limpar ---
-
-def clear_all_text():
-    st.session_state.consumo_antigo = ""
-    st.session_state.demanda_antigo = ""
-    st.session_state.consumo_novo = ""
-    st.session_state.demanda_novo = ""
-
-st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
-st.markdown("""<style>button[kind="primary"] { background-color: #D9534F !important; color: white !important; border-color: #D43F3A !important; }</style>""", unsafe_allow_html=True)
-
-# --- Seção de Informações do Cliente ---
-info_consumo_antigo = extrair_info_cliente(consumo_antigo)
-info_demanda_antigo = extrair_info_cliente(demanda_antigo)
-info_consumo_novo = extrair_info_cliente(consumo_novo)
-info_demanda_novo = extrair_info_cliente(demanda_novo)
-
-if any([consumo_antigo, demanda_antigo, consumo_novo, demanda_novo]):
-    st.markdown("---")
-    st.subheader("Informações de Medição Extraídas")
-    col_info1, col_info2 = st.columns(2)
-    with col_info1:
-        st.markdown("<h6>Medidor Anterior</h6>", unsafe_allow_html=True)
-        st.text(f"Contrato: {info_consumo_antigo['contrato']} (Consumo) / {info_demanda_antigo['contrato']} (Demanda)")
-        st.text(f"Serial: {info_consumo_antigo['serial']} (Consumo) / {info_demanda_antigo['serial']} (Demanda)")
-        if consumo_antigo and demanda_antigo:
-            if info_consumo_antigo['contrato'] != "Não encontrado" and info_demanda_antigo['contrato'] != "Não encontrado" and info_consumo_antigo['contrato'] != info_demanda_antigo['contrato']:
-                st.warning(":x: Atenção: Contratos do medidor antigo são diferentes.")
-            if info_consumo_antigo['serial'] != "Não encontrado" and info_demanda_antigo['serial'] != "Não encontrado" and info_consumo_antigo['serial'] != info_demanda_antigo['serial']:
-                st.warning(":x: Atenção: Seriais do medidor antigo são diferentes.")
-    with col_info2:
-        st.markdown("<h6>Medidor Novo</h6>", unsafe_allow_html=True)
-        st.text(f"Contrato: {info_consumo_novo['contrato']} (Consumo) / {info_demanda_novo['contrato']} (Demanda)")
-        st.text(f"Serial: {info_consumo_novo['serial']} (Consumo) / {info_demanda_novo['serial']} (Demanda)")
-        if consumo_novo and demanda_novo:
-            if info_consumo_novo['contrato'] != "Não encontrado" and info_demanda_novo['contrato'] != "Não encontrado" and info_consumo_novo['contrato'] != info_demanda_novo['contrato']:
-                st.warning(":x: Atenção: Contratos do medidor novo são diferentes.")
-            if info_consumo_novo['serial'] != "Não encontrado" and info_demanda_novo['serial'] != "Não encontrado" and info_consumo_novo['serial'] != info_demanda_novo['serial']:
-                st.warning(":x: Atenção: Seriais do medidor novo são diferentes.")
-
-st.markdown("---")
-
 # --- Seção de Parâmetros de Cálculo ---
-st.header("Parâmetros de Cálculo")
 param1, param2 = st.columns(2)
 with param1:
     st.subheader("Medidor Anterior")
@@ -425,8 +370,107 @@ with param2:
     tipo_opcao_novo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_novo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
     perdas_opcao_novo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_novo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
-# --- Botão de Calcular ---
-if st.button("Calcular Totais"):
+# --- Botões de Ação ---
+st.markdown("---")
+col_btn1, col_btn2, _ = st.columns([1, 1, 4]) # Cria colunas para os botões
+
+with col_btn1:
+    calculate_button = st.button("CALCULAR")
+
+with col_btn2:
+    def clear_all_text():
+        st.session_state.consumo_antigo = ""
+        st.session_state.demanda_antigo = ""
+        st.session_state.consumo_novo = ""
+        st.session_state.demanda_novo = ""
+    st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
+
+# --- Estilos dos Botões ---
+st.markdown("""
+<style>
+    /* Botão Verde para 'Calcular' */
+    div[data-testid="stButton"] > button:not([kind="primary"]) {
+        background-color: #28a745 !important;
+        color: white !important;
+        border-color: #28a745 !important;
+    }
+    /* Botão Vermelho para 'Limpar' */
+    button[kind="primary"] {
+        background-color: #D9534F !important;
+        color: white !important;
+        border-color: #D43F3A !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Placeholder para mensagens de aviso/erro
+message_placeholder = st.empty()
+
+st.markdown("---")
+
+# --- Abas para Inserção de Dados ---
+tab_mm, tab_faturamento = st.tabs(["MM Bruta", "Faturamento"])
+
+with tab_mm:
+    # --- Seção de Inserção de Dados ---
+    st.subheader("Medidor Anterior")
+    col1, col2 = st.columns(2)
+    with col1:
+        consumo_antigo = st.text_area("Consumo / Injeção (Medidor Anterior):", height=200, key="consumo_antigo")
+    with col2:
+        demanda_antigo = st.text_area("Demanda / DRE / ERE (Medidor Anterior):", height=200, key="demanda_antigo")
+
+    st.subheader("Medidor Novo")
+    col3, col4 = st.columns(2)
+    with col3:
+        consumo_novo = st.text_area("Consumo / Injeção (Medidor Novo):", height=200, key="consumo_novo")
+    with col4:
+        demanda_novo = st.text_area("Demanda / DRE / ERE (Medidor Novo):", height=200, key="demanda_novo")
+
+    # --- Seção de Informações do Cliente ---
+    info_consumo_antigo = extrair_info_cliente(consumo_antigo)
+    info_demanda_antigo = extrair_info_cliente(demanda_antigo)
+    info_consumo_novo = extrair_info_cliente(consumo_novo)
+    info_demanda_novo = extrair_info_cliente(demanda_novo)
+
+    warnings_list = []
+    if any([consumo_antigo, demanda_antigo, consumo_novo, demanda_novo]):
+        st.markdown("---")
+        st.subheader("Informações de Medição Extraídas")
+        col_info1, col_info2 = st.columns(2)
+        with col_info1:
+            st.markdown("<h6>Medidor Anterior</h6>", unsafe_allow_html=True)
+            st.text(f"Contrato: {info_consumo_antigo['contrato']} (Consumo) / {info_demanda_antigo['contrato']} (Demanda)")
+            st.text(f"Serial: {info_consumo_antigo['serial']} (Consumo) / {info_demanda_antigo['serial']} (Demanda)")
+            if consumo_antigo and demanda_antigo:
+                if info_consumo_antigo['contrato'] != "Não encontrado" and info_demanda_antigo['contrato'] != "Não encontrado" and info_consumo_antigo['contrato'] != info_demanda_antigo['contrato']:
+                    warnings_list.append(":x: Atenção: Contratos do medidor antigo são diferentes.")
+                if info_consumo_antigo['serial'] != "Não encontrado" and info_demanda_antigo['serial'] != "Não encontrado" and info_consumo_antigo['serial'] != info_demanda_antigo['serial']:
+                    warnings_list.append(":x: Atenção: Seriais do medidor antigo são diferentes.")
+        with col_info2:
+            st.markdown("<h6>Medidor Novo</h6>", unsafe_allow_html=True)
+            st.text(f"Contrato: {info_consumo_novo['contrato']} (Consumo) / {info_demanda_novo['contrato']} (Demanda)")
+            st.text(f"Serial: {info_consumo_novo['serial']} (Consumo) / {info_demanda_novo['serial']} (Demanda)")
+            if consumo_novo and demanda_novo:
+                if info_consumo_novo['contrato'] != "Não encontrado" and info_demanda_novo['contrato'] != "Não encontrado" and info_consumo_novo['contrato'] != info_demanda_novo['contrato']:
+                    warnings_list.append(":x: Atenção: Contratos do medidor novo são diferentes.")
+                if info_consumo_novo['serial'] != "Não encontrado" and info_demanda_novo['serial'] != "Não encontrado" and info_consumo_novo['serial'] != info_demanda_novo['serial']:
+                    warnings_list.append(":x: Atenção: Seriais do medidor novo são diferentes.")
+
+        # Adiciona a verificação entre medidores
+        contrato_antigo_final = info_consumo_antigo['contrato'] if info_consumo_antigo['contrato'] != "Não encontrado" else info_demanda_antigo['contrato']
+        contrato_novo_final = info_consumo_novo['contrato'] if info_consumo_novo['contrato'] != "Não encontrado" else info_demanda_novo['contrato']
+
+        if contrato_antigo_final != "Não encontrado" and contrato_novo_final != "Não encontrado" and contrato_antigo_final != contrato_novo_final:
+            warnings_list.append(":x: Atenção: Contratos do medidor antigo e novo são diferentes.")
+
+with tab_faturamento:
+    st.text_area("Relatório de faturamento do medidor anterior", height=200)
+    st.text_area("Relatório de faturamento do medidor novo", height=200)
+
+
+# --- Lógica de Cálculo ---
+if calculate_button:
     res_con_antigo, df_con_antigo = processar_dados_consumo(consumo_antigo) if consumo_antigo else (None, None)
     res_dem_antigo, df_dem_antigo = processar_dados_demanda(demanda_antigo) if demanda_antigo else (None, None)
     res_con_novo, df_con_novo = processar_dados_consumo(consumo_novo) if consumo_novo else (None, None)
@@ -510,12 +554,32 @@ if st.button("Calcular Totais"):
             if col in df_resultados.columns:
                 df_resultados[col] = df_resultados[col].apply(lambda x: format_br(x, p))
         
-        show_results_dialog(df_resultados, df_con_antigo, df_dem_antigo, df_con_novo, df_dem_novo)
+        # Lógica para definir o título do diálogo
+        contrato_antigo_final = info_consumo_antigo['contrato'] if info_consumo_antigo['contrato'] != "Não encontrado" else info_demanda_antigo['contrato']
+        contrato_novo_final = info_consumo_novo['contrato'] if info_consumo_novo['contrato'] != "Não encontrado" else info_demanda_novo['contrato']
+        
+        dialog_title = ""
+        if contrato_antigo_final != "Não encontrado" and contrato_novo_final != "Não encontrado" and contrato_antigo_final == contrato_novo_final:
+            dialog_title = contrato_antigo_final
+        elif contrato_antigo_final != "Não encontrado" and contrato_novo_final == "Não encontrado":
+            dialog_title = contrato_antigo_final
+        elif contrato_antigo_final == "Não encontrado" and contrato_novo_final != "Não encontrado":
+            dialog_title = contrato_novo_final
+
+        serial_antigo_final = info_consumo_antigo['serial'] if info_consumo_antigo['serial'] != "Não encontrado" else info_demanda_antigo['serial']
+        serial_novo_final = info_consumo_novo['serial'] if info_consumo_novo['serial'] != "Não encontrado" else info_demanda_novo['serial']
+
+        show_results_dialog(df_resultados, df_con_antigo, df_dem_antigo, df_con_novo, df_dem_novo, dialog_title, serial_antigo_final, serial_novo_final)
         
     elif any([consumo_antigo, demanda_antigo, consumo_novo, demanda_novo]):
-        st.error("Não foi possível encontrar dados válidos nos textos informados. Verifique o conteúdo colado.")
+        message_placeholder.error("Não foi possível encontrar dados válidos nos textos informados. Verifique o conteúdo colado.")
     else:
-        st.warning("Por favor, cole o conteúdo em um ou ambos os campos de texto antes de calcular.")
+        message_placeholder.warning("Por favor, cole o conteúdo em um ou ambos os campos de texto antes de calcular.")
+else:
+    # Mostra os avisos de contrato/serial se houver texto, mas o botão de calcular ainda não foi pressionado
+    if warnings_list:
+        message_placeholder.warning("\n\n".join(warnings_list))
+
 
 footer="""<style>
 

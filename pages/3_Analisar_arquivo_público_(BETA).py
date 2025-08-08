@@ -3,8 +3,50 @@ import pandas as pd
 import io
 from datetime import datetime, timedelta
 import plotly.express as px
+import numpy as np # Adicionado para cálculos numéricos
 
-# --- FUNÇÕES DE PROCESSAMENTO DE DADOS ---
+# --- NOVA FUNÇÃO COM A LÓGICA DO PLA-WIN ---
+
+def calcular_fator_potencia_plawin(row):
+    """
+    Calcula o Fator de Potência seguindo a lógica suposta do PLA-WIN.
+    - 'Wh': Potência Ativa
+    - 'varind': Potência Reativa Indutiva
+    - 'varcap': Potência Reativa Capacitiva
+    """
+    # Garante que as colunas existam, usando 0 como padrão se ausentes.
+    w = row.get('Wh', 0)
+    var_ind = row.get('varind', 0)
+    var_cap = row.get('varcap', 0)
+
+    # Calcula a potência reativa líquida
+    q_net = var_ind - var_cap
+
+    # Caso 1: Potência ativa é zero
+    if w == 0:
+        if q_net == 0:
+            return "100" # FP unitário, mas sem carga
+        else:
+            # FP é zero, o tipo (C/L) depende do reativo
+            return "0 C" if q_net < 0 else "0 L"
+
+    # Caso 2: Reativo líquido é indutivo (Q_net > 0)
+    if q_net > 0:
+        s = np.sqrt(w**2 + q_net**2)
+        fp = w / s if s != 0 else 0
+        return f"{int(round(fp * 100))} L"
+
+    # Caso 3: Reativo líquido é capacitivo (Q_net < 0) - Lógica especial PLA-WIN
+    elif q_net < 0:
+        return "100 C"
+
+    # Caso 4: Reativo líquido é zero (Q_net == 0)
+    else:
+        # FP é unitário. Com base nos seus dados, o PLA-WIN parece rotular como 'L'.
+        return "100 L"
+
+
+# --- FUNÇÕES DE PROCESSAMENTO DE DADOS (Restante do seu código) ---
 
 def obterDados(data, posicao, tamanho):
     """
@@ -33,7 +75,7 @@ def processar_parametros_gerais(file_content):
         'data_inicio_conj1_segm_horarios', 'data_inicio_conj2_segm_horarios',
         'hora_inicio_posto_P_conj2', 'hora_inicio_posto_FP_conj2', 'hora_inicio_posto_reservado_conj2'
     ]
-    
+
     # Extração dos dados
     medidor = obterDados(dados, 1, 8)
     data_hora_leitura = f"{obterDados(dados, 21, 2)}/{obterDados(dados, 23, 2)}/{obterDados(dados, 25, 2)} {obterDados(dados, 15, 2)}:{obterDados(dados, 17, 2)}:{obterDados(dados, 19, 2)}"
@@ -80,15 +122,15 @@ def processar_parametros_gerais(file_content):
         data_inicio_conj1_segm_horarios, data_inicio_conj2_segm_horarios,
         hora_inicio_posto_P_conj2, hora_inicio_posto_FP_conj2, hora_inicio_posto_reservado_conj2
     ]
-    
+
     df_parametros = pd.DataFrame([linha_parametros], columns=colunas)
-    
+
     # Dicionário de grandezas para uso posterior
     grandezas = {
         '01': 'Wh', '10': 'varind', '11': 'varcap', '14': '-Wh', '15': '-varind', '16': '-varcap',
         '17': 'v_a', '18': 'v_b', '19': 'v_c', '20': 'i_a', '21': 'i_b', '22': 'i_c'
     }
-    
+
     return df_parametros, grandezas
 
 def processar_memoria_massa(file_content_raw, params, grandezas_legend):
@@ -107,7 +149,7 @@ def processar_memoria_massa(file_content_raw, params, grandezas_legend):
             c1_vals.append(int(obterDados(linha, base_pos, 4)))
             c2_vals.append(int(obterDados(linha, base_pos + 4, 4)))
             c3_vals.append(int(obterDados(linha, base_pos + 8, 4)))
-    
+
     # Calcula o range de datas
     try:
         last_timestamp = datetime.strptime(params['data_hora_mm'].iloc[0], '%d/%m/%y %H:%M:%S')
@@ -124,7 +166,7 @@ def processar_memoria_massa(file_content_raw, params, grandezas_legend):
         'C2': c2_vals,
         'C3': c3_vals,
     })
-    
+
     df['Data'] = df['Timestamp'].dt.strftime('%d/%m/%Y')
     df['Hora'] = df['Timestamp'].dt.strftime('%H:%M:%S')
 
@@ -151,42 +193,53 @@ def processar_memoria_massa(file_content_raw, params, grandezas_legend):
             reservado_ativo = False
 
     def get_posto(t):
-        # Verifica se é sábado (5) ou domingo (6)
-        if t.weekday() >= 5:
-            return "Fora Ponta"
-            
-        # Verifica se é feriado
-        if t.date() in feriados_dates:
-            return "Fora Ponta"
-        
+        if t.weekday() >= 5: return "Fora Ponta"
+        if t.date() in feriados_dates: return "Fora Ponta"
+
         current_time = t.time()
         if reservado_ativo and current_time > time_res and current_time <= time_fp:
             return "Reservado"
         if current_time > time_p and current_time <= time_fp:
             return "Ponta"
         return "Fora Ponta"
-    
+
     df['Posto Horário'] = df['Timestamp'].apply(get_posto)
 
     # Adiciona colunas de grandezas calculadas
     final_cols_order = ['Timestamp', 'Data', 'Hora'] # Mantém o Timestamp para o filtro
     grandezas_params = params.filter(like='grandeza_').iloc[0]
 
+    # Mapeia as grandezas necessárias para o cálculo do FP
+    required_grandezas = {'Wh', 'varind', 'varcap'}
+    found_grandezas = set()
+
     for i, g_code in enumerate(grandezas_params):
         canal_num = i + 1
         g_name = grandezas_legend.get(g_code)
-        
+
         if g_name and g_code in ['01', '10', '11', '14', '15', '16']:
             df[g_name] = df[f'C{canal_num}'] * 12
             final_cols_order.append(g_name)
-        
+            if g_name in required_grandezas:
+                found_grandezas.add(g_name)
+
         final_cols_order.append(f'C{canal_num}')
 
+    # --- MODIFICAÇÃO: Adiciona a coluna Fator de Potência ---
+    # Verifica se as colunas necessárias para o FP existem. Se não, cria com valor 0.
+    for g in required_grandezas:
+        if g not in df.columns:
+            df[g] = 0
+
+    # Aplica a função para criar a nova coluna
+    df['Fator de Potência'] = df.apply(calcular_fator_potencia_plawin, axis=1)
+    final_cols_order.insert(3, 'Fator de Potência') # Insere a coluna após a 'Hora'
+    # --- FIM DA MODIFICAÇÃO ---
+
     final_cols_order.append('Posto Horário')
-    
-    # Filtra e reordena o DF para a exibição final
+
     existing_cols = [col for col in final_cols_order if col in df.columns]
-    
+
     return df[existing_cols]
 
 def processar_alteracoes_e_faltas(file_content):
@@ -306,7 +359,7 @@ def display_parametros_layout(df, grandezas_legend):
     st.markdown("---")
     st.markdown("**Horário Reservado**")
     col1, col2, col3, col4, col5 = st.columns(5)
-    
+
     val_sab, val_dom, val_fer = ('black', 'black', 'black')
     if params['reservado_ativo'] == 'Sim':
         if params['reservado_sabado'] != '06': val_sab = 'red'
@@ -327,12 +380,12 @@ def display_parametros_layout(df, grandezas_legend):
         st.markdown(create_metric_card("Domingo", params['reservado_domingo'], value_color=val_dom), unsafe_allow_html=True)
     with col5:
         st.markdown(create_metric_card("Feriado", params['reservado_feriado'], value_color=val_fer), unsafe_allow_html=True)
-        
+
     # --- Quarta Linha (Outros Horários) ---
     st.markdown("---")
     col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
     c1, c2, c3, c4, c5, c6, c7 = params['horario_verao'], params['horario_P'], params['horario_FP'], params['horario_capacitivo'], params['horario_indutivo'], params['data_reposicao_demanda'], params['hora_reposicao_demanda']
-    
+
     cor_value = 'black'
     cor_bg = '#f0f2f6'
 
@@ -377,7 +430,7 @@ def display_faltas_energia(df_faltas):
     """Cria o layout para a seção de faltas de energia."""
     st.markdown("---")
     st.subheader("Faltas de Energia Registradas")
-    
+
     df_vis = df_faltas.drop(columns=['medidor'])
     if df_vis.empty:
         st.info("Nenhuma falta de energia registrada no arquivo.")
@@ -387,7 +440,7 @@ def display_faltas_energia(df_faltas):
         df_vis['data_inicio'] = pd.to_datetime(df_vis['data_inicio'], format='%d/%m/%y %H:%M:%S', errors='coerce')
         df_vis['data_fim'] = pd.to_datetime(df_vis['data_fim'], format='%d/%m/%y %H:%M:%S', errors='coerce')
         df_vis.dropna(subset=['data_inicio', 'data_fim'], inplace=True)
-        
+
         event_points = []
         for _, row in df_vis.sort_values('data_inicio').iterrows():
             event_points.extend([
@@ -396,7 +449,7 @@ def display_faltas_energia(df_faltas):
                 {'Timestamp': row['data_fim'], 'Estado': 'Desligado'},
                 {'Timestamp': row['data_fim'], 'Estado': 'Ligado'}
             ])
-        
+
         if event_points:
             df_plot = pd.DataFrame(event_points).drop_duplicates().sort_values('Timestamp')
             fig = px.line(df_plot, x='Timestamp', y='Estado', title="Linha do Tempo de Status da Energia", line_shape='hv')
@@ -429,7 +482,7 @@ if uploaded_file is not None:
     if st.button("Analisar Arquivo"):
         try:
             string_data = uploaded_file.getvalue().decode('latin-1')
-            
+
             with st.spinner("Processando arquivo..."):
                 st.session_state.df_parametros, st.session_state.grandezas_legend = processar_parametros_gerais(string_data)
                 st.session_state.df_mm = processar_memoria_massa(string_data, st.session_state.df_parametros, st.session_state.grandezas_legend)
@@ -447,7 +500,7 @@ if st.session_state.analysis_done:
     with tab1:
         display_parametros_layout(st.session_state.df_parametros, st.session_state.grandezas_legend)
         display_faltas_energia(st.session_state.df_faltas)
-        
+
         st.markdown("---")
         st.subheader("Alterações Registradas")
         df_alteracoes_vis = st.session_state.df_alteracoes.drop(columns=['Medidor'])
@@ -455,16 +508,16 @@ if st.session_state.analysis_done:
             st.dataframe(df_alteracoes_vis, use_container_width=True, hide_index=True)
         else:
             st.info("Nenhuma alteração registrada no arquivo.")
-    
+
     with tab2:
         st.subheader("Análise de Memória de Massa")
         if not st.session_state.df_mm.empty:
-            
+
             # --- Slider de Data ---
             min_ts = st.session_state.df_mm['Timestamp'].min()
             max_ts = st.session_state.df_mm['Timestamp'].max()
             intervalo_minutos = int(st.session_state.df_parametros['intervalo_mm'].iloc[0])
-            
+
             if min_ts != max_ts:
                 selected_range = st.slider(
                     'Filtre o período para análise:',
@@ -479,23 +532,24 @@ if st.session_state.analysis_done:
                 start_ts, end_ts = min_ts, max_ts
 
             df_mm_filtrado = st.session_state.df_mm[
-                (st.session_state.df_mm['Timestamp'] >= start_ts) & 
+                (st.session_state.df_mm['Timestamp'] >= start_ts) &
                 (st.session_state.df_mm['Timestamp'] <= end_ts)
             ]
 
             with st.expander("Ver dados detalhados da Memória de Massa (filtrado)"):
+                # Mostra o DF com a nova coluna de Fator de Potência
                 st.dataframe(df_mm_filtrado.drop(columns=['Timestamp']), use_container_width=True)
-            
+
             # Sumarização
             st.markdown("---")
             st.markdown("**Consumo Sumarizado por Posto Horário (filtrado)**")
-            
+
             grandeza_c1_code = st.session_state.df_parametros['grandeza_1o_canal'].iloc[0]
             grandeza_c1_name = st.session_state.grandezas_legend.get(grandeza_c1_code)
 
             if grandeza_c1_name and grandeza_c1_name in df_mm_filtrado.columns:
                 summary = df_mm_filtrado.groupby('Posto Horário')[grandeza_c1_name].sum().to_dict()
-                
+
                 ponta_val = (summary.get('Ponta', 0) / 12) / 1000
                 fponta_val = (summary.get('Fora Ponta', 0) / 12) / 1000
                 res_val = (summary.get('Reservado', 0) / 12) / 1000
