@@ -159,7 +159,7 @@ def show_results_dialog(df_resultados, contrato, serial_antigo, serial_novo):
         st.rerun()
 
 # --- Interface do Aplicativo ---
-st.title("Confirmação para 2 medidores")
+st.title("Confirmação para 2 MDs com relatório de faturamento")
 st.markdown("""<style>[aria-label="dialog"]{width: 1100px;}</style>""", unsafe_allow_html=True)
 
 # --- Seção de Parâmetros de Cálculo ---

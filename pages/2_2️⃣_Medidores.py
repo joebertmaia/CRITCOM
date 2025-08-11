@@ -354,7 +354,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
         st.rerun()
 
 # --- Interface do Aplicativo ---
-st.title("Confirmação para 2 medidores")
+st.title("Confirmação para 2 MDs")
 st.markdown("""<style>[aria-label="dialog"]{width: 1100px;}</style>""", unsafe_allow_html=True)
 
 # --- Seção de Parâmetros de Cálculo ---
@@ -429,6 +429,14 @@ info_consumo_novo = extrair_info_cliente(consumo_novo)
 info_demanda_novo = extrair_info_cliente(demanda_novo)
 
 warnings_list = []
+
+if consumo_antigo or demanda_antigo:
+    if consumo_antigo:
+        if re.search(r"Postos horários\s+Cadastro de opção tarifária", consumo_antigo):
+            warnings_list.append(":warning: Atenção: Medidor anterior está com postos horários via 'Cadastro de opção tarifária'. Verifique se os postos estão corretos.")
+        if re.search(r"Postos horários\s+Cadastro de opção tarifária", demanda_antigo):
+            warnings_list.append(":warning: Atenção: Medidor anterior está com postos horários via 'Cadastro de opção tarifária'. Verifique se os postos estão corretos.")
+
 if any([consumo_antigo, demanda_antigo, consumo_novo, demanda_novo]):
     st.markdown("---")
     st.subheader("Informações de Medição Extraídas")
