@@ -176,7 +176,7 @@ with param2:
     perdas_opcao_novo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_novo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
 # --- Botões de Ação ---
-st.markdown("---")
+st.markdown("")
 col_btn1, col_btn2, _ = st.columns([1, 1, 4]) # Cria colunas para os botões
 
 with col_btn1:
@@ -209,13 +209,12 @@ st.markdown("""
 # Placeholder para mensagens de aviso/erro
 message_placeholder = st.empty()
 
-st.markdown("---")
-
-# --- Seção de Inserção de Dados ---
-st.subheader("Medidor Anterior")
-faturamento_antigo = st.text_area("Relatório de faturamento do medidor anterior", height=200, key="faturamento_antigo")
-st.subheader("Medidor Novo")
-faturamento_novo = st.text_area("Relatório de faturamento do medidor novo", height=200, key="faturamento_novo")
+with st.sidebar:
+    # --- Seção de Inserção de Dados ---
+    st.subheader("Medidor Anterior")
+    faturamento_antigo = st.text_area("Relatório de faturamento do medidor anterior", height=200, key="faturamento_antigo")
+    st.subheader("Medidor Novo")
+    faturamento_novo = st.text_area("Relatório de faturamento do medidor novo", height=200, key="faturamento_novo")
 
 # --- Seção de Informações do Cliente ---
 info_antigo = extrair_info_cliente(faturamento_antigo)
