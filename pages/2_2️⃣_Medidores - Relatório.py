@@ -212,9 +212,9 @@ message_placeholder = st.empty()
 with st.sidebar:
     # --- Seção de Inserção de Dados ---
     st.subheader("Medidor Anterior")
-    faturamento_antigo = st.text_area("Relatório de faturamento do medidor anterior", height=200, key="faturamento_antigo")
+    faturamento_antigo = st.text_area("Relatório de faturamento:", height=150, key="faturamento_antigo")
     st.subheader("Medidor Novo")
-    faturamento_novo = st.text_area("Relatório de faturamento do medidor novo", height=200, key="faturamento_novo")
+    faturamento_novo = st.text_area("Relatório de faturamento:", height=150, key="faturamento_novo")
 
 # --- Seção de Informações do Cliente ---
 info_antigo = extrair_info_cliente(faturamento_antigo)
