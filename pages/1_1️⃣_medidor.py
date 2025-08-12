@@ -404,12 +404,11 @@ with col_tipo:
 with col_perdas:
     perdas_opcao = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:",("Não", "Sim"),horizontal=True,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
-with st.sidebar:
-    dados1, dados2 = st.columns(2)
-    with dados1:
-        consumo_injecao = st.text_area("kWh/kWh Inj:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_injecao")
-    with dados2:
-        kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
+dados1, dados2 = st.columns(2)
+with dados1:
+    consumo_injecao = st.text_area("kWh/kWh Inj:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_injecao")
+with dados2:
+    kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
 
 # --- Botões de Ação ---
 st.markdown("")
