@@ -394,53 +394,23 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
         st.rerun()
 
 # --- Interface do Aplicativo ---
-st.title("Confirmação para 1 MD")
-
-# --- Seção de Parâmetros de Cálculo ---
-constante = st.number_input("Constante:",min_value=0.0,value=1.0,step=0.01,format="%.4f")
-col_tipo, col_perdas = st.columns(2)
-with col_tipo:
-    tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=True,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
-with col_perdas:
-    perdas_opcao = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:",("Não", "Sim"),horizontal=True,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+st.title("Confirmação para 1 medidor")
 
 dados1, dados2 = st.columns(2)
 with dados1:
-    consumo_injecao = st.text_area("kWh/kWh Inj:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_injecao")
+    consumo_injecao = st.text_area(
+        "Dê um Ctrl-A na página de consumo/injeção e cole aqui:", height=200, placeholder="Cole o texto aqui...", key="consumo_injecao")
 with dados2:
-    kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
+    kW_kwinj_dre_ere = st.text_area("Dê um Ctrl-A na página de demanda/DRE/ERE e cole aqui:", height=200, placeholder="Cole o texto aqui...", key="kW_kwinj_dre_ere")
 
-# --- Botões de Ação ---
-st.markdown("")
-col_btn1, col_btn2, _ = st.columns([1, 1, 4]) # Cria colunas para os botões
+# --- Botão Limpar ---
 
-with col_btn1:
-    calculate_button = st.button("CALCULAR")
+def clear_all_text():
+    st.session_state.consumo_injecao = ""
+    st.session_state.kW_kwinj_dre_ere = ""
 
-with col_btn2:
-    def clear_all_text():
-        st.session_state.consumo_injecao = ""
-        st.session_state.kW_kwinj_dre_ere = ""
-
-    st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
-
-# --- Estilos dos Botões ---
-st.markdown("""
-<style>
-    /* Botão Verde para 'Calcular' */
-    div[data-testid="stButton"] > button:not([kind="primary"]) {
-        background-color: #28a745 !important;
-        color: white !important;
-        border-color: #28a745 !important;
-    }
-    /* Botão Vermelho para 'Limpar' */
-    button[kind="primary"] {
-        background-color: #D9534F !important;
-        color: white !important;
-        border-color: #D43F3A !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
+st.markdown("""<style>button[kind="primary"] { background-color: #D9534F !important; color: white !important; border-color: #D43F3A !important; }</style>""", unsafe_allow_html=True)
 
 # --- Seção de Informações do Cliente ---
 info_consumo = extrair_info_cliente(consumo_injecao)
@@ -465,8 +435,27 @@ if consumo_injecao or kW_kwinj_dre_ere:
         if info_consumo['serial'] != "Não encontrado" and info_demanda['serial'] != "Não encontrado" and info_consumo['serial'] != info_demanda['serial']:
             st.warning(f":x: Atenção: O número do medidor é diferente entre os dois relatórios ({info_consumo['serial']} vs {info_demanda['serial']}).")
 
+st.markdown("---")
+
+# --- Seção de Parâmetros de Cálculo ---
+st.header("Parâmetros de Cálculo")
+col_const, col_tipo, col_perdas = st.columns(3)
+
+with col_const:
+    constante = st.number_input(
+        "Constante de faturamento:",
+        min_value=0.0,
+        value=1.0,
+        step=0.01,
+        format="%.4f"
+    )
+with col_tipo:
+    tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=False,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+with col_perdas:
+    perdas_opcao = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+
 # --- Botão e Lógica de Processamento ---
-if calculate_button:
+if st.button("Calcular Totais"):
     resultados_consumo, df_consumo = None, None
     resultados_demanda, df_demanda = None, None
     
