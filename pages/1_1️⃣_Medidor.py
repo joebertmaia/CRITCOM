@@ -19,13 +19,6 @@ st.logo(
     icon_image="CRITCOM.svg",
 )
 
-# --- INICIALIZAÇÃO DO SESSION STATE (NOVA ADIÇÃO) ---
-# Usado para controlar a exibição dos resultados na página principal
-if 'show_results' not in st.session_state:
-    st.session_state.show_results = False
-if 'results_data' not in st.session_state:
-    st.session_state.results_data = None
-
 # --- FUNÇÕES DE PROCESSAMENTO (NÃO MODIFICAR) ---
 
 def processar_dados_consumo(texto_bruto):
@@ -141,10 +134,10 @@ def extrair_info_cliente(texto_bruto):
         
     return info
 
-# --- Função que define o conteúdo dos resultados (ALTERADA) ---
-# Removido o decorador @st.dialog e o botão de fechar
-def display_results(df_resultados, df_consumo_raw, df_demanda_raw):
-    """Exibe o DataFrame de resultados e gráficos diretamente na página."""
+# --- Função que define o conteúdo do diálogo ---
+@st.dialog("Resultados do Cálculo", width='large')
+def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
+    """Exibe o DataFrame de resultados e gráficos dentro de um diálogo."""
     
     # --- Geração Manual da Tabela HTML ---
     header_html = "<thead><tr>"
@@ -395,7 +388,10 @@ def display_results(df_resultados, df_consumo_raw, df_demanda_raw):
                 }});
             }}
         </script>
-    """, width=500, height=2000, scrolling=False) # Aumentar a altura e desativar a rolagem interna
+    """, width=500, height=700, scrolling=True)
+
+    if st.button("Fechar", key="close_dialog"):
+        st.rerun()
 
 # --- Interface do Aplicativo ---
 st.title("Confirmação para 1 MD")
@@ -403,7 +399,7 @@ st.markdown(
     """
     <style>
         section[data-testid="stSidebar"] {
-            width: 500px !important;
+            width: 400px !important;
         }
     </style>
     """,
@@ -417,31 +413,31 @@ with st.sidebar:
     with dados2:
         kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
 
-    # --- Seção de Parâmetros de Cálculo ---
-    constante = st.number_input("Constante:",min_value=0.0,value=1.0,step=0.01,format="%.4f")
-    col_tipo, col_perdas = st.columns(2)
-    with col_tipo:
-        tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=False,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
-    with col_perdas:
-        perdas_opcao = st.radio("Adicionar perdas?",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+# --- Seção de Parâmetros de Cálculo ---
+constante = st.number_input("Constante:",min_value=0.0,value=1.0,step=0.01,format="%.4f")
+col_tipo, col_perdas = st.columns(2)
+with col_tipo:
+    tipo_opcao = st.radio("Tipo:",("Grandeza", "Grandeza EAC", "Pulso"),horizontal=False,key="tipo",captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+with col_perdas:
+    perdas_opcao = st.radio("Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:",("Não", "Sim"),horizontal=False,key="perdas", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
-    # --- Botões de Ação ---
-    st.markdown("")
-    col_btn1, col_btn2 = st.columns([1, 2]) # Cria colunas para os botões
+# --- Botões de Ação ---
+st.markdown("")
+col_btn1, col_btn2 = st.columns([1, 2]) # Cria colunas para os botões
 
-    with col_btn1:
-        calculate_button = st.button("CALCULAR")
+with col_btn1:
+    calculate_button = st.button("CALCULAR")
 
-    with col_btn2:
-        # --- Função de limpeza atualizada ---
-        def clear_all_text():
-            st.session_state.consumo_injecao = ""
-            st.session_state.kW_kwinj_dre_ere = ""
-            # Esconde os resultados ao limpar
-            st.session_state.show_results = False
-            st.session_state.results_data = None
+with col_btn2:
+    # --- Função de limpeza atualizada ---
+    def clear_all_text():
+        st.session_state.consumo_injecao = ""
+        st.session_state.kW_kwinj_dre_ere = ""
+        # Esconde os resultados ao limpar
+        st.session_state.show_results = False
+        st.session_state.results_data = None
 
-        st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
+    st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
 
 # --- Estilos dos Botões ---
 st.markdown("""
@@ -460,28 +456,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# --- Seção de Informações do Cliente ---
-info_consumo = extrair_info_cliente(consumo_injecao)
-info_demanda = extrair_info_cliente(kW_kwinj_dre_ere)
-
-if consumo_injecao or kW_kwinj_dre_ere:
-    st.subheader("Informações de Medição Extraídas")
-    col_info1, col_info2 = st.columns(2)
-    with col_info1:
-        st.markdown("<h6>Consumo / Injeção</h6>", unsafe_allow_html=True)
-        st.text(f"Contrato: {info_consumo['contrato']}")
-        st.text(f"Serial: {info_consumo['serial']}")
-    with col_info2:
-        st.markdown("<h6>Demanda / DRE / ERE</h6>", unsafe_allow_html=True)
-        st.text(f"Contrato: {info_demanda['contrato']}")
-        st.text(f"Serial: {info_demanda['serial']}")
-
-    if consumo_injecao and kW_kwinj_dre_ere:
-        if info_consumo['contrato'] != "Não encontrado" and info_demanda['contrato'] != "Não encontrado" and info_consumo['contrato'] != info_demanda['contrato']:
-            st.warning(f":x: Atenção: O número do contrato é diferente entre os dois relatórios ({info_consumo['contrato']} vs {info_demanda['contrato']}).")
-        if info_consumo['serial'] != "Não encontrado" and info_demanda['serial'] != "Não encontrado" and info_consumo['serial'] != info_demanda['serial']:
-            st.warning(f":x: Atenção: O número do medidor é diferente entre os dois relatórios ({info_consumo['serial']} vs {info_demanda['serial']}).")
 
 # --- Botão e Lógica de Processamento ---
 if calculate_button:
@@ -565,7 +539,7 @@ if calculate_button:
 
     add_demanda_section('kW recebido', 'kW recebido máximo', constante_kw)
 
-    # --- Salva os resultados no st.session_state em vez de chamar o diálogo ---
+    # --- Chama o diálogo se houver resultados ---
     if table_data:
         df_resultados = pd.DataFrame(table_data)
         
@@ -579,38 +553,11 @@ if calculate_button:
         df_resultados['Perdas (%)'] = df_resultados['Perdas (%)'].apply(lambda x: format_br(x, 1) if isinstance(x, (int, float)) else x)
         df_resultados['Valor Final'] = df_resultados['Valor Final'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)
         
-        # Armazena os dados processados e os dataframes brutos na sessão
-        st.session_state.results_data = {
-            "df_resultados": df_resultados,
-            "df_consumo": df_consumo,
-            "df_demanda": df_demanda
-        }
-        # Define a flag para mostrar os resultados
-        st.session_state.show_results = True
-        st.rerun() # Adiciona um rerun para garantir que a exibição seja atualizada imediatamente
-
+        show_results_dialog(df_resultados, df_consumo, df_demanda)
+        
     elif consumo_injecao and not resultados_consumo:
         st.error("Não foi possível encontrar dados de consumo/injeção válidos no primeiro campo.")
-        st.session_state.show_results = False
     elif kW_kwinj_dre_ere and not resultados_demanda:
         st.error("Não foi possível encontrar dados de demanda/DRE/ERE válidos no segundo campo.")
-        st.session_state.show_results = False
     elif not consumo_injecao and not kW_kwinj_dre_ere:
         st.warning("Por favor, cole o conteúdo em um ou ambos os campos de texto antes de calcular.")
-        st.session_state.show_results = False
-
-# --- NOVA SEÇÃO DE RESULTADOS ---
-# Esta seção verifica a flag no session_state e exibe os resultados se for True
-if st.session_state.show_results and st.session_state.results_data:
-    st.markdown("---")
-    st.subheader("Resultados do Cálculo")
-    
-    # Recupera os dados da sessão
-    data = st.session_state.results_data
-    
-    # Chama a função para renderizar os resultados diretamente na página
-    display_results(
-        df_resultados=data['df_resultados'],
-        df_consumo_raw=data['df_consumo'],
-        df_demanda_raw=data['df_demanda']
-    )

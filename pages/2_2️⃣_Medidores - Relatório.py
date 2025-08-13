@@ -153,27 +153,33 @@ def show_results_dialog(df_resultados, contrato, serial_antigo, serial_novo):
                 }});
             }}
         </script>
-    """, width=500, height=700, scrolling=True)
+    """, width=800, height=700, scrolling=True)
 
     if st.button("Fechar", key="close_dialog"):
         st.rerun()
 
 # --- Interface do Aplicativo ---
 st.title("Confirmação para 2 MDs com relatório de faturamento")
-st.markdown("""<style>[aria-label="dialog"]{width: 1100px;}</style>""", unsafe_allow_html=True)
+st.markdown("""<style>[aria-label="dialog"]{width: 850px;}</style>""", unsafe_allow_html=True)
 
 # --- Seção de Parâmetros de Cálculo ---
 param1, param2 = st.columns(2)
 with param1:
     st.subheader("Medidor Anterior")
     constante_antigo = st.number_input("Constante:", min_value=0.0, value=1.0, step=0.01, format="%.4f", key="const_antigo")
-    tipo_opcao_antigo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_antigo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
-    perdas_opcao_antigo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_antigo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+    colum1, colum2 = st.columns(2)
+    with colum1:
+        tipo_opcao_antigo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=False, key="tipo_antigo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+    with colum2:
+        perdas_opcao_antigo = st.radio("Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_antigo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 with param2:
     st.subheader("Medidor Novo")
     constante_novo = st.number_input("Constante:", min_value=0.0, value=1.0, step=0.01, format="%.4f", key="const_novo")
-    tipo_opcao_novo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=True, key="tipo_novo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
-    perdas_opcao_novo = st.radio("Adicionar Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_novo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
+    colum1, colum2 = st.columns(2)
+    with colum1:
+        tipo_opcao_novo = st.radio("Tipo:", ("Grandeza", "Grandeza EAC", "Pulso"), horizontal=False, key="tipo_novo", captions=["","Comum em medidores SL7000 da EAC.", "Maioria dos pontos da ERO."])
+    with colum2:
+        perdas_opcao_novo = st.radio("Perdas? :warning: **Não adicionar quando digitar no SILCO** :warning:", ("Não", "Sim"), horizontal=True, key="perdas_novo", captions=["Se o cliente possuir TP e TC.","Para medições diretas ou em baixa tensão (apenas TC)."])
 
 # --- Botões de Ação ---
 st.markdown("")
@@ -212,9 +218,9 @@ message_placeholder = st.empty()
 with st.sidebar:
     # --- Seção de Inserção de Dados ---
     st.subheader("Medidor Anterior")
-    faturamento_antigo = st.text_area("Relatório de faturamento:", height=150, key="faturamento_antigo")
+    faturamento_antigo = st.text_area("Relatório de faturamento:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="faturamento_antigo")
     st.subheader("Medidor Novo")
-    faturamento_novo = st.text_area("Relatório de faturamento:", height=150, key="faturamento_novo")
+    faturamento_novo = st.text_area("Relatório de faturamento:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="faturamento_novo")
 
 # --- Seção de Informações do Cliente ---
 info_antigo = extrair_info_cliente(faturamento_antigo)
@@ -315,22 +321,3 @@ if calculate_button:
 else:
     if warnings_list:
         message_placeholder.warning("\n\n".join(warnings_list))
-
-footer="""<style>
-.footer {
-position: absolute;
-top:230px;
-left: 0;
-bottom: 0px;
-width: 100%;
-background-color: transparent;
-color: filter: invert(1); black;
-text-align: center;
-}
-</style>
-<div class="footer">
-<hr style='width:70%;text-align:center;margin:auto'>
-<p>Centro de Operação da Medição (COM)<br>Grupo Energisa</p>
-</div>
-"""
-st.markdown(footer,unsafe_allow_html=True)
