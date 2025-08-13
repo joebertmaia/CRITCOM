@@ -419,9 +419,9 @@ st.markdown(
 with st.sidebar:
     dados1, dados2 = st.columns(2)
     with dados1:
-        consumo_injecao = st.text_area("kWh/kWh Inj:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_injecao")
+        consumo_injecao = st.text_area("kWh/kWh Inj:", height=200, placeholder="Dê um Ctrl+A no relatório de consumo, Ctrl+C e cole aqui.", key="consumo_injecao")
     with dados2:
-        kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
+        kW_kwinj_dre_ere = st.text_area("kW/DRE/ERE:", height=200, placeholder="Dê um Ctrl+A no relatório de demanda, Ctrl+C e cole aqui.", key="kW_kwinj_dre_ere")
 
 # --- Seção de Parâmetros de Cálculo ---
 constante = st.number_input("Constante:",min_value=0.0,value=1.0,step=0.01,format="%.4f")

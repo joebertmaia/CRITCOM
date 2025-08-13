@@ -217,10 +217,8 @@ message_placeholder = st.empty()
 
 with st.sidebar:
     # --- Seção de Inserção de Dados ---
-    st.subheader("Medidor Anterior")
-    faturamento_antigo = st.text_area("Relatório de faturamento:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="faturamento_antigo")
-    st.subheader("Medidor Novo")
-    faturamento_novo = st.text_area("Relatório de faturamento:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="faturamento_novo")
+    faturamento_antigo = st.text_area("Medidor Anterior", height=150, placeholder="Dê um Ctrl+A no relatório de faturamento, Ctrl+C e cole aqui.", key="faturamento_antigo")
+    faturamento_novo = st.text_area("Medidor Novo", height=150, placeholder="Dê um Ctrl+A no relatório de faturamento, Ctrl+C e cole aqui.", key="faturamento_novo")
 
 # --- Seção de Informações do Cliente ---
 info_antigo = extrair_info_cliente(faturamento_antigo)

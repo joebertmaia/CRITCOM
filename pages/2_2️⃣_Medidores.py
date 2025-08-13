@@ -427,16 +427,16 @@ with st.sidebar:
     st.subheader("Medidor Anterior")
     col1, col2 = st.columns(2)
     with col1:
-        consumo_antigo = st.text_area("kWh/kWh Inj:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_antigo")
+        consumo_antigo = st.text_area("kWh/kWh Inj:", height=150, placeholder="Dê um Ctrl+A no relatório de consumo, Ctrl+C e cole aqui.", key="consumo_antigo")
     with col2:
-        demanda_antigo = st.text_area("kW/DRE/ERE:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="demanda_antigo")
+        demanda_antigo = st.text_area("kW/DRE/ERE:", height=150, placeholder="Dê um Ctrl+A no relatório de demanda, Ctrl+C e cole aqui.", key="demanda_antigo")
 
     st.subheader("Medidor Novo")
     col3, col4 = st.columns(2)
     with col3:
-        consumo_novo = st.text_area("kWh/kWh Inj:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="consumo_novo")
+        consumo_novo = st.text_area("kWh/kWh Inj:", height=150, placeholder="Dê um Ctrl+A no relatório de consumo, Ctrl+C e cole aqui.", key="consumo_novo")
     with col4:
-        demanda_novo = st.text_area("kW/DRE/ERE:", height=150, placeholder="Dê um Ctrl+A no Hemera, Ctrl+C e cole aqui.", key="demanda_novo")
+        demanda_novo = st.text_area("kW/DRE/ERE:", height=150, placeholder="Dê um Ctrl+A no relatório de demanda, Ctrl+C e cole aqui.", key="demanda_novo")
 
 # --- Seção de Informações do Cliente ---
 info_consumo_antigo = extrair_info_cliente(consumo_antigo)
