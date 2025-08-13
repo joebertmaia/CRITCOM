@@ -470,8 +470,8 @@ def display_faltas_energia(df_faltas):
 # --- INTERFACE PRINCIPAL DO APLICATIVO ---
 
 st.set_page_config(layout="wide", page_title="Analisador de Medidores ABNT")
-st.title("Analisador de Arquivos ABNT")
-st.markdown("Faça o upload de um arquivo de memória de massa (formato texto) para extrair os parâmetros.")
+st.title("Analisador de Arquivo Público")
+st.markdown("Faça o upload de um arquivo público para ler os parâmetros.")
 
 uploaded_file = st.file_uploader("Escolha um arquivo", label_visibility="collapsed")
 
