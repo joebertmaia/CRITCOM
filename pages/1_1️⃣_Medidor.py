@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="https://www.energisa.com.br/sites/energisa/files/Energisa120%20%281%29.ico",
     layout="wide",
     menu_items={
-        'About': "Versão 1.0.0. Bugs ou sugestões, enviar um e-mail para joebert.oliveira@energisa.com.br"}
+        'About': "Versão 1.2.0. Bugs ou sugestões, enviar um e-mail para joebert.oliveira@energisa.com.br"}
 )
 
 st.logo(
@@ -28,7 +28,7 @@ def processar_dados_consumo(texto_bruto):
     """
     header_match = re.search(r"^Data\s+Dia\s+Postos horários\s+(.*)$", texto_bruto, re.MULTILINE)
     if not header_match:
-        return None, None
+        return None
     header_string = header_match.group(1).strip()
     colunas_dados = [col.strip() for col in header_string.split('\t')]
     num_colunas_dados = len(colunas_dados)
@@ -43,37 +43,28 @@ def processar_dados_consumo(texto_bruto):
     padrao_dados = re.compile(padrao_dados_str, re.MULTILINE)
     dados_encontrados = padrao_dados.findall(texto_bruto)
     if not dados_encontrados:
-        return None, None
+        return None
     colunas_df = ['DataHora', 'Dia', 'Posto Horario'] + colunas_dados
     df = pd.DataFrame(dados_encontrados, columns=colunas_df)
-    df['DataHora'] = pd.to_datetime(df['DataHora'], format='%d/%m/%Y %H:%M') # Converte para datetime
-    resultados = {}
+    df['DataHora'] = pd.to_datetime(df['DataHora'], format='%d/%m/%Y %H:%M')
+    
     for nome_coluna in colunas_dados:
         df[nome_coluna] = pd.to_numeric(
             df[nome_coluna].str.replace('.', '', regex=False).str.replace(',', '.', regex=False),
             errors='coerce'
         )
-        operacao = 'soma'
-        calculo = df.groupby('Posto Horario')[nome_coluna].sum()
-        resultados[nome_coluna] = {
-            'operacao': operacao,
-            'valores': {
-                'Fora Ponta': calculo.get('Fora Ponta', 0.0),
-                'Ponta': calculo.get('Ponta', 0.0),
-                'Reservado': calculo.get('Reservado', 0.0)
-            }
-        }
-        resultados[nome_coluna]['valores'] = {k: (v if pd.notna(v) else 0.0) for k, v in resultados[nome_coluna]['valores'].items()}
-    return resultados, df
+    
+    # A agregação será feita depois, se necessário
+    return df
 
 def processar_dados_demanda(texto_bruto):
     """
-    Processa dados de demanda, identificando cabeçalhos e aplicando a lógica correta
-    (soma ou máximo) para cada coluna de dados.
+    Processa dados de demanda, identificando cabeçalhos e retornando o DataFrame bruto.
+    A lógica de cálculo (soma ou máximo) foi movida para uma função separada.
     """
     header_match = re.search(r"^Data\s+Dia\s+Postos horários\s+(.*)$", texto_bruto, re.MULTILINE)
     if not header_match:
-        return None, None
+        return None
     header_string = header_match.group(1).strip()
     colunas_dados = [col.strip() for col in header_string.split('\t')]
     num_colunas_dados = len(colunas_dados)
@@ -88,22 +79,40 @@ def processar_dados_demanda(texto_bruto):
     padrao_dados = re.compile(padrao_dados_str, re.MULTILINE)
     dados_encontrados = padrao_dados.findall(texto_bruto)
     if not dados_encontrados:
-        return None, None
+        return None
     colunas_df = ['DataHora', 'Dia', 'Posto Horario'] + colunas_dados
     df = pd.DataFrame(dados_encontrados, columns=colunas_df)
-    df['DataHora'] = pd.to_datetime(df['DataHora'], format='%d/%m/%Y %H:%M') # Converte para datetime
-    resultados = {}
+    df['DataHora'] = pd.to_datetime(df['DataHora'], format='%d/%m/%Y %H:%M')
+    
     for nome_coluna in colunas_dados:
         df[nome_coluna] = pd.to_numeric(
             df[nome_coluna].str.replace('.', '', regex=False).str.replace(',', '.', regex=False),
             errors='coerce'
         )
-        if nome_coluna.strip().upper() == "UFER":
+    return df
+
+def recalcular_resultados(df, tipo_calculo='consumo'):
+    """
+    Calcula os resultados agregados (soma ou máximo) a partir de um DataFrame.
+    """
+    if df is None:
+        return None
+
+    resultados = {}
+    colunas_dados = [col for col in df.columns if col not in ['DataHora', 'Dia', 'Posto Horario']]
+
+    for nome_coluna in colunas_dados:
+        if tipo_calculo == 'demanda':
+            if nome_coluna.strip().upper() == "UFER":
+                operacao = 'soma'
+                calculo = df.groupby('Posto Horario')[nome_coluna].sum()
+            else:
+                operacao = 'máximo'
+                calculo = df.groupby('Posto Horario')[nome_coluna].max()
+        else: # Consumo
             operacao = 'soma'
             calculo = df.groupby('Posto Horario')[nome_coluna].sum()
-        else:
-            operacao = 'máximo'
-            calculo = df.groupby('Posto Horario')[nome_coluna].max()
+
         resultados[nome_coluna] = {
             'operacao': operacao,
             'valores': {
@@ -113,7 +122,8 @@ def processar_dados_demanda(texto_bruto):
             }
         }
         resultados[nome_coluna]['valores'] = {k: (v if pd.notna(v) else 0.0) for k, v in resultados[nome_coluna]['valores'].items()}
-    return resultados, df
+    return resultados
+
 
 # --- FUNÇÃO PARA EXTRAIR INFORMAÇÕES DO CLIENTE ---
 def extrair_info_cliente(texto_bruto):
@@ -388,7 +398,7 @@ def show_results_dialog(df_resultados, df_consumo_raw, df_demanda_raw):
                 }});
             }}
         </script>
-    """, width=500, height=700, scrolling=True)
+    """, width=1000, height=700, scrolling=True)
 
     if st.button("Fechar", key="close_dialog"):
         st.rerun()
@@ -423,20 +433,22 @@ with col_perdas:
 
 # --- Botões de Ação ---
 st.markdown("")
-col_btn1, col_btn2 = st.columns([1, 2]) # Cria colunas para os botões
+col_btn1, col_btn2 = st.columns([1, 2])
+
+# --- Função de limpeza atualizada ---
+def clear_all_text():
+    st.session_state.consumo_injecao = ""
+    st.session_state.kW_kwinj_dre_ere = ""
+    # Limpa os dados processados e os DataFrames do estado da sessão
+    keys_to_clear = ['dados_processados', 'df_consumo', 'df_demanda_original', 'df_demanda_filtrado', 'demanda_range_slider']
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
 
 with col_btn1:
     calculate_button = st.button("CALCULAR")
 
 with col_btn2:
-    # --- Função de limpeza atualizada ---
-    def clear_all_text():
-        st.session_state.consumo_injecao = ""
-        st.session_state.kW_kwinj_dre_ere = ""
-        # Esconde os resultados ao limpar
-        st.session_state.show_results = False
-        st.session_state.results_data = None
-
     st.button("LIMPAR DADOS", key="clear", on_click=clear_all_text, type="primary")
 
 # --- Estilos dos Botões ---
@@ -457,20 +469,78 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Botão e Lógica de Processamento ---
+# --- Lógica de Processamento Inicial ---
 if calculate_button:
-    resultados_consumo, df_consumo = None, None
-    resultados_demanda, df_demanda = None, None
-    
     if consumo_injecao:
         with st.spinner("Processando dados de Consumo/Injeção..."):
-            resultados_consumo, df_consumo = processar_dados_consumo(consumo_injecao)
-            
+            st.session_state.df_consumo = processar_dados_consumo(consumo_injecao)
+    else:
+        st.session_state.df_consumo = None
+
     if kW_kwinj_dre_ere:
         with st.spinner("Processando dados de Demanda/DRE/ERE..."):
-            resultados_demanda, df_demanda = processar_dados_demanda(kW_kwinj_dre_ere)
+            df_demanda_temp = processar_dados_demanda(kW_kwinj_dre_ere)
+            st.session_state.df_demanda_original = df_demanda_temp
+            st.session_state.df_demanda_filtrado = df_demanda_temp # Inicializa o filtrado como o original
+    else:
+        st.session_state.df_demanda_original = None
+        st.session_state.df_demanda_filtrado = None
+    
+    if st.session_state.get('df_consumo') is not None or st.session_state.get('df_demanda_original') is not None:
+        st.session_state.dados_processados = True
+    else:
+        st.session_state.dados_processados = False
+        if consumo_injecao:
+            st.error("Não foi possível encontrar dados de consumo/injeção válidos.")
+        if kW_kwinj_dre_ere:
+            st.error("Não foi possível encontrar dados de demanda/DRE/ERE válidos.")
+        if not consumo_injecao and not kW_kwinj_dre_ere:
+            st.warning("Por favor, cole o conteúdo em um ou ambos os campos de texto.")
 
-    # --- Lógica para criar a tabela de resultados ---
+# --- Interface de Filtragem e Exibição de Resultados ---
+if st.session_state.get('dados_processados', False):
+    
+    # --- NOVA SEÇÃO: Ferramenta para suprimir picos ---
+    if st.session_state.get('df_demanda_original') is not None and 'kW fornecido' in st.session_state.df_demanda_original.columns:
+        with st.expander("✔️ Ferramenta para Suprimir Picos de Demanda", expanded=False):
+            df_original = st.session_state.df_demanda_original.dropna(subset=['kW fornecido'])
+            
+            # Evita erro se a coluna estiver vazia após dropar NaNs
+            if not df_original.empty:
+                min_val = float(df_original['kW fornecido'].min())
+                max_val = float(df_original['kW fornecido'].max())
+
+                st.info("Use o slider abaixo para selecionar o intervalo de 'kW fornecido' que deseja **MANTER**.")
+
+                # Verifica se min e max são diferentes para evitar erro no slider
+                if min_val < max_val:
+                    selected_range = st.slider(
+                        "Selecione o intervalo de demanda (kW fornecido):",
+                        min_value=min_val,
+                        max_value=max_val,
+                        value=(min_val, max_val), # Default é o intervalo completo
+                        key="demanda_range_slider"
+                    )
+                    
+                    # Filtra o DataFrame original com base no intervalo selecionado
+                    st.session_state.df_demanda_filtrado = df_original[
+                        (df_original['kW fornecido'] >= selected_range[0]) & 
+                        (df_original['kW fornecido'] <= selected_range[1])
+                    ]
+                else:
+                    # Se todos os valores forem iguais, apenas exibe a informação e não filtra
+                    st.write(f"Todos os valores de demanda são iguais a {min_val:.4f}. Nenhum filtro aplicado.")
+                    st.session_state.df_demanda_filtrado = df_original
+            else:
+                # Caso o dataframe fique vazio
+                st.warning("Não há dados de 'kW fornecido' para filtrar.")
+                st.session_state.df_demanda_filtrado = df_original
+
+    # Recalcula os resultados com base nos DataFrames (potencialmente filtrados)
+    resultados_consumo = recalcular_resultados(st.session_state.get('df_consumo'), tipo_calculo='consumo')
+    resultados_demanda = recalcular_resultados(st.session_state.get('df_demanda_filtrado'), tipo_calculo='demanda')
+
+    # --- Lógica para criar a tabela de resultados (adaptada) ---
     table_data = []
     postos = ['Ponta', 'Reservado', 'Fora Ponta']
     
@@ -553,11 +623,5 @@ if calculate_button:
         df_resultados['Perdas (%)'] = df_resultados['Perdas (%)'].apply(lambda x: format_br(x, 1) if isinstance(x, (int, float)) else x)
         df_resultados['Valor Final'] = df_resultados['Valor Final'].apply(lambda x: format_br(x, 4) if isinstance(x, (int, float)) else x)
         
-        show_results_dialog(df_resultados, df_consumo, df_demanda)
-        
-    elif consumo_injecao and not resultados_consumo:
-        st.error("Não foi possível encontrar dados de consumo/injeção válidos no primeiro campo.")
-    elif kW_kwinj_dre_ere and not resultados_demanda:
-        st.error("Não foi possível encontrar dados de demanda/DRE/ERE válidos no segundo campo.")
-    elif not consumo_injecao and not kW_kwinj_dre_ere:
-        st.warning("Por favor, cole o conteúdo em um ou ambos os campos de texto antes de calcular.")
+        # O diálogo agora usa os dataframes do st.session_state
+        show_results_dialog(df_resultados, st.session_state.get('df_consumo'), st.session_state.get('df_demanda_filtrado'))
