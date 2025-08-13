@@ -196,7 +196,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
 
         <style>
             .capture-area {{ padding: 10px; background-color: #ffffff; }}
-            table {{ width: 400px; border-collapse: collapse; font-family: sans-serif; font-size: 14px; margin-bottom: 20px; }}
+            table {{ width: 600px; border-collapse: collapse; font-family: sans-serif; font-size: 14px; margin-bottom: 20px; }}
             th, td {{ border: 1px solid #e0e0e0; padding: 8px; text-align: center; }} /* Centralizado */
             th {{ background-color: #f0f2f6; }}
             .button-container {{ text-align: right; margin-top: 10px; margin-bottom: 20px; }}
