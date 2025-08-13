@@ -348,7 +348,7 @@ def show_results_dialog(df_resultados, df_consumo_antigo, df_demanda_antigo, df_
                 }});
             }}
         </script>
-    """, height=700, scrolling=True)
+    """, width=500, height=700, scrolling=True)
 
     if st.button("Fechar", key="close_dialog"):
         st.rerun()

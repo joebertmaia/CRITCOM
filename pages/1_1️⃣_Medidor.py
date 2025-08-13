@@ -211,7 +211,7 @@ def display_results(df_resultados, df_consumo_raw, df_demanda_raw):
 
         <style>
             .capture-area {{ padding: 10px; background-color: #ffffff; }}
-            table {{ width: 100%!important; border-collapse: collapse; font-family: sans-serif; font-size: 14px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 14px; margin-bottom: 20px; }}
             th, td {{ border: 1px solid #e0e0e0; padding: 8px; text-align: center; }}
             th {{ background-color: #f0f2f6; }}
             .button-container {{ text-align: right; margin-top: 10px; margin-bottom: 20px; }}
@@ -395,7 +395,7 @@ def display_results(df_resultados, df_consumo_raw, df_demanda_raw):
                 }});
             }}
         </script>
-    """, height=2000, scrolling=False) # Aumentar a altura e desativar a rolagem interna
+    """, width=500, height=2000, scrolling=False) # Aumentar a altura e desativar a rolagem interna
 
 # --- Interface do Aplicativo ---
 st.title("Confirmação para 1 MD")
@@ -403,7 +403,7 @@ st.markdown(
     """
     <style>
         section[data-testid="stSidebar"] {
-            width: 500px !important; # Set the width to your desired value
+            width: 500px !important;
         }
     </style>
     """,
