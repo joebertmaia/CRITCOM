@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação para Medidores</title>
+    
+    <!-- Tailwind CSS para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bibliotecas para Gráficos e Captura de Imagem -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <!-- Plugin para anotações no gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <!-- Estilos personalizados -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f6;
+        }
+        #results-modal {
+            transition: opacity 0.3s ease;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .results-table th, .results-table td {
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            text-align: center;
+        }
+        .results-table th {
+            background-color: #f0f2f6;
+        }
+        .thick-border-left {
+            border-left: 2px solid #888;
+        }
+        .separator-row td {
+            text-align: center;
+            font-weight: bold;
+            background-color: #e8e8e8;
+        }
+        .tab-button.active {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Estilos para as abas principais */
+        .main-tab-button {
+            transition: all 0.2s;
+        }
+        .main-tab-button.active {
+            border-color: #1d4ed8;
+            color: #1d4ed8;
+            background-color: #eff6ff;
+        }
+        .main-tab-content {
+            display: none;
+        }
+        .main-tab-content.active {
+            display: block;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        
+        <!-- Cabeçalho -->
+        <header class="flex items-center gap-4 mb-6 pb-4 border-b">
+            <img src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQyOSIgaGVpZ2h0PSI0MjUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KCiA8ZyBjbGFzcz0ibGF5ZXIiIGRpc3BsYXk9ImlubGluZSI+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDxnIGlkPSJzdmdfMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjc1IC0yOTkuNTIpIHRyYW5zbGF0ZSgwIDI5OS41MikgdHJhbnNsYXRlKDQxLjc1IDApIHRyYW5zbGF0ZSgtNSAwKSB0cmFuc2xhdGUoMCAtMjk3LjMpIG1hdHJpeCgxIDAgMCAxIC02NS43NSAwKSI+CiAgIDxwYXRoIGQ9Im0yMjIuNTEsMjk3LjczYzUuNTEsMC4wMSAxMS4wMywwIDE2LjU0LDBjOS4yNiwtMC4wMSAxOC41MiwwIDI3Ljc4LDAuMDFjMTAuNiwwLjAxIDIxLjIxLDAuMDEgMzEuODIsLTAuMDFjOS4yLDAgMTguNCwtMC4wMSAyNy42LDBjNS40NSwwIDEwLjksMCAxNi4zNiwwYzE5LjkxLC0wLjAzIDM5LjhgMCA1OS42OCwxLjE4YzAuNywwLjA0IDEuMzksMC4wOCAyLjEsMC4xMmMyOC4zNywxLjcgNTIuMTQsMTAuOTcgNzEuNzMsMzIuMjdjMjAuMTcsMjMuOTYgMjMuMDQsNTEuODEgMjMuMDMsODEuOTVjMCwyLjE0IDAsNC4yOCAwLjAxLDYuNDJjMC4wMSw1Ljc4IDAuMDEsMTEuNTYgMC4wMSwxNy4zNWMwLDMuNjIgMCw3LjI1IDAsMTAuODhjMC4wMSwxMi42OCAwLjAyLDI1LjM3IDAuMDIsMzguMDVjMCwxMS43NyAwLjAxLDIzLjUzIDAuMDIsMzUuMjljMC4wMiwxMC4xNSAwLjAyLDIwLjI5IDAuMDIsMzAuNDRjMCw2LjA0IDAsMTIuMDggMC4wMSwxOC4xMWMwLjAxLDUuNyAwLjAxLDExLjM5IDAuMDEsMTcuMDljMCwyLjA2IDAsNC4xMyAwLDYuMmMwLjExLDM3Ljk4IC0yLjU4LDczLjk1IC0zMC41NywxMDIuMjdjLTE0LjA4LDEzLjA5IC0zMi4wOSwyMS4yNiAtNTAuOTMsMjQuMzRjLTAuNzIsMC4xMiAtMS40NSwwLjI0IC0yLjIsMC4zNmMtMTQuOSwyLjIzIC0zMC4wMSwyLjEgLTQ1LjA0LDIuMDljLTIuMTIsMC4wMSAtNC4yNCwwLjAxIC02LjM1LDAuMDFjLTUuNywwLjAxIC0xMS40MSwwLjAyIC0xNy4xMSwwLjAyYy0zLjU3LDAgLTcuMTUsMCAtMTAuNzIsMGMtMTIuNTEsMC4wMSAtMjUuMDIsMC4wMSAtMzcuNTIsMC4wMWMtMTEuNiwwIC0yMy4yMSwwLjAxIC0zNC44MSwwLjAzYy0xMC4wMSwwLjAxIC0yMC4wMiwwLjAyIC0zMC4wMiwwLjAyYy01Ljk2LDAgLTExLjkyLDAgLTE3Ljg3LDAuMDFjLTUuNjEsMC4wMSAtMTEuMjIsMC4wMSAtMTYuODMsMGMtMi4wNCwwIC00LjA4LDAgLTYuMTIsMC4wMWMtMTAuMTksMC4wMyAtMjAuMjgsLTAuMTkgLTMwLjQzLC0xLjEzYy0wLjgzLC0wLjA4IC0xLjY3LC0wLjE2IC0yLjUzLC0wLjI0Yy0yNi4xMiwtMi42OCAtNDkuMTksLTE0Ljc1IC02Ni4yLC0zNC44OGMtMjYuMSwtMzMuOTQgLTIzLjE3LC03OC4xNCAtMjMuMTMsLTExOC42NWMwLC0zLjk1IDAsLTcuOTEgMCwtMTEuODZjLTAuMDEsLTYuNjcgMCwtMTMuMzQgMCwtMjAuMDJjMC4wMSwtNi43MSAwLjAxLC0xMy40MSAwLC0yMC4xMmMtMC4wMiwtMzIuNCAtMC4wMiwtNjQuOCAwLjQsLTk3LjE5YzAuMDQsLTIuNTMgMC4wNiwtNS4wNiAwLjA5LC03LjU5YzAuMjcsLTI5LjY5IDMuOTUsLTU4LjgzIDI1Ljg0LC04MC44M2MwLjkzLC0wLjkxIDEuODUsLTEuODEgMi44LC0yLjc0YzEuMjgsLTEuMzEgMS4yOCwtMS4zMSAyLjU4LC0yLjY1YzEwLjgxLC0xMC41NCAyNC4wNCwtMTcuMDcgMzguNDIsLTIxLjM1YzAuOTQsLTAuMyAxLjg4LC0wLjU5IDIuODUsLTAuOWMyNC45LC02LjggNTMuMTEsLTQuNCA3OC42NiwtNC4zN3oiIGZpbGw9IiMwMDQxNkEiIGlkPSJvYmplY3QtMCIvPgogICA8cGF0aCBkPSJtMzgwLjIxLDM5My40NmMyMC41MiwxOC43MSAyMC41MiwxOC43MSAyNC43OSwyNy41NGMtMC4yNSwyLjg4IC0wLjU1LDQuNSAtMi41Miw2LjY2Yy0wLjY0LDAuNDkgLTEuMjksMC45NyAtMS45NiwxLjQ3Yy0wLjcyLDAuNTUgLTEuNDUsMS4xMSAtMi4yLDEuNjhjLTEuMTgsMC44NyAtMS4xOCwwLjg3IC0yLjM5LDEuNzVjLTAuOCwwLjYxIC0xLjYxLDEuMjIgLTIuNDMsMS44NGMtMS42NywxLjI2IC0zLjM1LDIuNTEgLTUuMDIsMy43NWMtMi4zNiwxLjc1IC00LjY5LDMuNTIgLTcuMDMsNS4yOWMtNy4wMSw1LjMxIC03LjAxLDUuMzEgLTkuNzcsNy4zM2MtMS42MiwxLjE4IC0zLjIzLDIuNDEgLTQuODMsMy42M2MtMi44NSwxLjYgLTIuODUsMS42IC01LjMyLDEuNzljLTMuOTQsLTEuODUgLTYuMjksLTQuOTMgLTkuMSwtOC4xOWMtMTQuMDIsLTE1LjU1IC0zMi4wNCwtMjYuNTkgLTUzLjM0LC0yOC4yMmMtMjQuODUsLTEuMjQgLTQ2LjEyLDQuNjIgLTY1LjA5LDIxLjIyYy0xNS42NywxNC43NSAtMjUuMzMsMzUuNTUgLTI2LjI5LDU3LjA2Yy0wLjY1LDI1LjE4IDYuMDQsNDguMDYgMjMuMjksNjYuOTRjMTMuMTEsMTMuNjkgMzIuMTEsMjIuOTYgNTEsMjVjNS45NiwwLjA3IDExLjkyLC0wLjE5IDE3Ljg4LC0wLjUyYzYsLTAuMTYgMTAuMDYsLTAuMjYgMTQuNywzLjgzYzEuMTYsMS4yMSAyLjMsMi40NCAzLjQyLDMuNjljMS40NCwxLjE1IDIuODksMi4yOCA0LjM3LDMuMzdjMC42NSwwLjQ5IDEuMjksMC45NyAxLjk2LDEuNDdjMy42NiwyLjU1IDcuMzIsMi43OSAxMS42NywyLjE2YzQuNTksLTIgNy45MSwtNC40NSAxMS41NiwtNy44NmMwLjUxLC0wLjQ4IDEuMDMsLTAuOTYgMS41NSwtMS40NWMzLjg5LC0zLjY2IDcuNjMsLTcuNDQgMTEuMzUsLTExLjI3YzAuNTMsLTAuNTUgMS4wNywtMS4xIDEuNjIsLTEuNjZjMi4xOCwtMi4yNSA0LjM2LC00LjQ5IDYuNTIsLTYuNzZjMS42LC0xLjY5IDMuMjMsLTMuMzUgNC44NiwtNS4wMmMwLjczLC0wLjc3IDAuNzMsLTAuNzcgMS40NiwtMS41NmMxLjQsLTEuNDEgMS40LC0xLjA4LTMuNDJjMy44MywwLjE1IDUuNzYsMS4yNyA4LjUsMy44N2MyLjU2LDIuMzggNS4xNCw0LjY4IDcuODcsNi44NmMwLjU4LDAuNDggMS4xNywwLjk2IDEuNzgsMS40NWMxLjE3LDAuOTUgMi4zNSwxLjg5IDMuNTQsMi44MmMyLjQ3LDIuMDIgNC4xNCwzLjU5IDUuMzMsNi41N2MtMC4wOSw4LjAyIC05Ljg3LDE2IC0xNS4wMiwyMS40M2MtMC44NCwwLjkgLTEuNjgsMS44IC0yLjU0LDIuNzNjLTIyLjg4LDIzLjg5IC01Ni4yNCwzNy42MSAtODkuMjMsMzguNDdjLTI3Ljk4LDAuMzUgLTUyLjY2LC00LjQgLTc3LjIzLC0xOC4yYy0xLjEyLC0wLjYzIC0yLjI0LC0xLjI1IC0zLjM5LC0xLjljLTMxLjgyLC0xOC43OSAtNTQuNTIsLTQ4LjUxIC02My45NywtODQuMjdjLTAuNTcsLTIuMjcgLTEuMTEsLTQuNTUgLTEuNjQsLTYuODNjLTAuMTcsLTAuNjkgLTAuMzQsLTEuMzcgLTAuNTEsLTIuMDhjLTUsLTIxLjYxIC0zLjc3LC00NS4yOSAwLjUxLC02Ni45MmMwLjE1LC0wLjc2IDAuMywtMS41MyAwLjQ1LC0yLjMxYzQuMjcsLTIwLjMxIDE0LjIxLC0zOC45MyAyNy41NSwtNTQuNjljMS4xNywtMS40MSAxLjE3LC0xLjQxIDIuMzcsLTIuODVjMjIuMjEsLTI1LjYyIDU1Ljk4LC00NC4xNCA5MC4wNywtNDYuOWMzOC45OCwtMi4zOCA3Ni40Nyw1LjM0IDEwNi43NywzMS4yMXoiIGZpbGw9IiNGREZDRjciIGlkPSJvYmplY3QtMSIvPgogICA8cGF0aCBkPSJtNDA1LjM2LDQ3OS4yOGM0LjMyLDEuMTggNi44Nyw0LjE1IDkuOTYsNy4yOWMwLjY0LDAuNiAxLjI5LDEuMjEgMS45NSwxLjg0YzMuMTksMy4xOSA0LjYyLDQuNzkgNS4yOSw5LjM2Yy0wLjcxLDQuMTYgLTIuNjUsNi4zOCAtNS41Niw5LjIzYy00LjE0LDQuMTMgLTguMjUsOC4yOSAtMTIuMzUsMTIuNDZjLTcuMzUsNy40NCAtMTQuNzEsMTQuODcgLTIyLjA4LDIyLjI5Yy00LjQ2LDQuNDkgLTguOTEsOC45OCAtMTMuMzQsMTMuNDhjLTQuMyw0LjM3IC04LjYxLDguNzIgLTEyLjk0LDEzLjA1Yy0xLjY0LDEuNjYgLTMuMjgsMy4zMiAtNC45MSw0Ljk5Yy0yLjI5LDIuMzIgLTQuNTgsNC42MyAtNi44OSw2LjkzYy0wLjY3LDAuNjkgLTEuMzQsMS4zOCAtMi4wMywyLjFjLTQuNjEsNC41NCAtNC42MSw0LjU0IC04LjY5LDUuMzJjLTMuMDgsLTAuNjkgLTQuMjcsLTEuMzggLTYuNDYsLTMuNjFjLTAuNjUsLTAuNjYgLTEuMzEsLTEuMzEgLTEuOTksLTEuOTljLTAuNjksLTAuNzEgLTEuMzgsLTEuNDMgLTIuMDksLTIuMTdjLTAuNzMsLTAuNzQgLTEuNDYsLTEuNDcgLTIuMjEsLTIuMjNjLTIuMzMsLTIuMzYgLTQuNjQsLTQuNzQgLTYuOTUsLTcuMTJjLTEuNTUsLTEuNTcgLTMuMSwtMy4xNCAtNC42NiwtNC43MWMtNi4xNCwtNi4yMyAtMTIuMjIsLTEyLjQ3IC0xNy45NCwtMTkuMWMtMS4xOSwtMS4zNyAtMi40MywtMi43MSAtMy42OCwtNC4wNGMtMC44NSwtMC45MSAtMC44NSwtMC45MSAtMS43MiwtMS44M2MtMC41OSwtMC42MiAtMS4xOCwtMS4yMyAtMS43OCwtMS44NmMtMS4yOSwtMS45NiAtMS4yOSwtMS45NiAtMS44OSwtNC4yNGMwLjk5LC00LjQzIDQuMDUsLTYuOTMgNy4yMywtMTAuMDNjMC42MiwtMC42NSAxLjIzLC0xLjI5IDEuODcsLTEuOTVjMi44NSwtMi44NCA0LjY4LC00LjU1IDguNjUsLTUuNDdjMy44MSwwLjk4IDUuMTQsMi44OSA3Ljg1LDUuNzNjMC45OSwwLjk5IDEuOTcsMS45NyAyLjk2LDIuOTZjNy42OCw3LjY4IDE1LjM2LDE1LjM2IDIzLjA0LDIzLjA0YzUuMDgsLTQuMjUgOS44NCwtOC42OCAxNC41LC0xMy4zN2MwLjk0LC0wLjkzIDAuOTQsLTAuOTMgMS45LC0xLjg5YzAuOTMsLTAuOTMgMC45MywtMC45MyAxLjg5LC0xLjg5YzAuNTQsLTAuNTQgMS4wOSwtMS4wOSAxLjY1LC0xLjY2YzEuODIsLTEuOTMgMy41NSwtMy45IDUuMjksLTUuOTFjMy44LC00LjM3IDcuODMsLTguNDYgMTEuOTQsLTEyLjU0YzAuNzUsLTAuNzUgMS41MSwtMS41MSAyLjI5LC0yLjI4YzIuMzksLTIuMzkgNC43OCwtNC43NyA3LjE3LC03LjE0YzEuNjEsLTEuNjEgMy4yMiwtMy4yMiA0Ljg0LC00LjgzYzcuMjMsLTcuMjIgNy4yMywtNy4yMiAxMC43OSwtMTAuNzRjMS4wOSwtMS4xIDIuMTgsLTIuMiAzLjI2LC0zLjMyYzMuMjUsLTMuMzUgMy4yNSwtMy4zNSA1Ljg0LC00LjE1eiIgZmlsbD0iIzREQkU2NiIgaWQ9Im9iamVjdC0yIi8+CiAgPC9nPgogPC9nPgo8L3N2Zz4=' alt="CRITCOM Logo" class="h-12">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">CRITCOM</h1>
+        </header>
+
+        <!-- Abas Principais (1 Medidor vs 2 Medidores) -->
+        <div class="mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-4" aria-label="Main Tabs">
+                    <button class="main-tab-button active whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="1-medidor">1 Medidor</button>
+                    <button class="main-tab-button whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="2-medidores">2 Medidores</button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba "1 Medidor" -->
+        <div id="main-tab-1-medidor" class="main-tab-content active">
+            <!-- Seção de Parâmetros -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div class="p-4 border rounded-lg md:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Parâmetros do Medidor</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="constante_unico" class="block text-sm font-medium text-gray-600">Constante:</label>
+                            <input type="number" id="constante_unico" value="1.0" step="0.01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Tipo:</span>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_unico" value="Grandeza" checked class="form-radio"> <span class="ml-2">Grandeza</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_unico" value="Grandeza EAC" class="form-radio"> <span class="ml-2">Grandeza EAC</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_unico" value="Pulso" class="form-radio"> <span class="ml-2">Pulso</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Adicionar Perdas? <span class="text-yellow-600">⚠️</span></span>
+                            <div class="flex gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_unico" value="Não" checked class="form-radio"> <span class="ml-2">Não</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_unico" value="Sim" class="form-radio"> <span class="ml-2">Sim</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <!-- Abas de Dados para 1 Medidor -->
+            <div>
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="1m-mm-bruta">MM Bruta</button>
+                        <button class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="1m-faturamento">Faturamento</button>
+                    </nav>
+                </div>
+                <div class="pt-6">
+                    <div id="tab-1m-mm-bruta" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <textarea id="consumo_unico" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                            <textarea id="demanda_unico" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                        </div>
+                    </div>
+                    <div id="tab-1m-faturamento" class="tab-content">
+                        <textarea id="faturamento_unico" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba "2 Medidores" -->
+        <div id="main-tab-2-medidores" class="main-tab-content">
+            <!-- Seção de Parâmetros -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <!-- Medidor Anterior -->
+                <div class="p-4 border rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Medidor Anterior</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="constante_antigo" class="block text-sm font-medium text-gray-600">Constante:</label>
+                            <input type="number" id="constante_antigo" value="1.0" step="0.01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Tipo:</span>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_antigo" value="Grandeza" checked class="form-radio"> <span class="ml-2">Grandeza</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_antigo" value="Grandeza EAC" class="form-radio"> <span class="ml-2">Grandeza EAC</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_antigo" value="Pulso" class="form-radio"> <span class="ml-2">Pulso</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Adicionar Perdas? <span class="text-yellow-600">⚠️</span></span>
+                            <div class="flex gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_antigo" value="Não" checked class="form-radio"> <span class="ml-2">Não</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_antigo" value="Sim" class="form-radio"> <span class="ml-2">Sim</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Medidor Novo -->
+                <div class="p-4 border rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Medidor Novo</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="constante_novo" class="block text-sm font-medium text-gray-600">Constante:</label>
+                            <input type="number" id="constante_novo" value="1.0" step="0.01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Tipo:</span>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_novo" value="Grandeza" checked class="form-radio"> <span class="ml-2">Grandeza</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_novo" value="Grandeza EAC" class="form-radio"> <span class="ml-2">Grandeza EAC</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_novo" value="Pulso" class="form-radio"> <span class="ml-2">Pulso</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Adicionar Perdas? <span class="text-yellow-600">⚠️</span></span>
+                            <div class="flex gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_novo" value="Não" checked class="form-radio"> <span class="ml-2">Não</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_novo" value="Sim" class="form-radio"> <span class="ml-2">Sim</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Abas de Dados para 2 Medidores -->
+            <div>
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="2m-mm-bruta">MM Bruta</button>
+                        <button class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="2m-faturamento">Faturamento</button>
+                    </nav>
+                </div>
+                <div class="pt-6">
+                    <div id="tab-2m-mm-bruta" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">Medidor Anterior</h3>
+                                <textarea id="consumo_antigo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                                <textarea id="demanda_antigo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md mt-4"></textarea>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">Medidor Novo</h3>
+                                <textarea id="consumo_novo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                                <textarea id="demanda_novo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md mt-4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-2m-faturamento" class="tab-content">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">Medidor Anterior</h3>
+                                <textarea id="faturamento_antigo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">Medidor Novo</h3>
+                                <textarea id="faturamento_novo" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação Comuns -->
+        <div class="flex items-center gap-4 my-6 pt-6 border-t">
+            <button id="calculate-btn" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">CALCULAR</button>
+            <button id="clear-btn" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">LIMPAR DADOS</button>
+        </div>
+
+        <!-- Placeholder para Mensagens -->
+        <div id="message-placeholder" class="my-4"></div>
+
+        <!-- Rodapé -->
+        <footer class="text-center mt-10 pt-6 border-t">
+            <p class="text-gray-600">Centro de Operação da Medição (COM)</p>
+            <p class="text-gray-500">Grupo Energisa</p>
+        </footer>
+    </div>
+
+    <!-- Modal de Resultados (inicialmente oculto) -->
+    <div id="results-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-y-auto p-6 relative">
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            <div id="modal-content">
+                <!-- O conteúdo dos resultados será injetado aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- REFERÊNCIAS AOS ELEMENTOS DO DOM ---
+        const calculateBtn = document.getElementById('calculate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const resultsModal = document.getElementById('results-modal');
+        const modalContent = document.getElementById('modal-content');
+        const messagePlaceholder = document.getElementById('message-placeholder');
+        
+        const mainTabButtons = document.querySelectorAll('.main-tab-button');
+        const mainTabContents = document.querySelectorAll('.main-tab-content');
+        const dataTabButtons = document.querySelectorAll('.tab-button');
+        const dataTabContents = document.querySelectorAll('.tab-content');
+
+        // --- LÓGICA DE PROCESSAMENTO DE DADOS (Tradução do Python) ---
+
+        // Helper para converter número no formato brasileiro para float
+        const parseNumber = (str) => {
+            if (typeof str !== 'string' || !str) return 0;
+            return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+        };
+        
+        // Helper para formatar número para o padrão brasileiro
+        const formatBR = (value, precision) => {
+            if (value === null || isNaN(value)) return '';
+            return value.toLocaleString('pt-BR', {
+                minimumFractionDigits: precision,
+                maximumFractionDigits: precision
+            });
+        };
+
+        function processarDados(textoBruto, tipo) { // tipo = 'consumo' ou 'demanda'
+            if (!textoBruto) return { resultados: null, df: null };
+
+            const headerMatch = textoBruto.match(/^Data\s+Dia\s+Postos horários\s+(.*)$/m);
+            if (!headerMatch) return { resultados: null, df: null };
+
+            const colunasDados = headerMatch[1].trim().split(/\t+/);
+            const numColunasDados = colunasDados.length;
+
+            const valorPattern = "([\\d.,-]+)";
+            const regexParts = [
+                "^(\\d{2}\\/\\d{2}\\/\\d{4}\\s\\d{2}:\\d{2})",
+                "([A-Za-zçáéíóúãõâêôü]+)",
+                "(Fora Ponta|Ponta|Reservado)",
+            ];
+            regexParts.push(...Array(numColunasDados).fill(valorPattern));
+            const padraoDados = new RegExp(regexParts.join("\\s+") + "$", "gm");
+
+            let dadosEncontrados = [...textoBruto.matchAll(padraoDados)];
+            if (!dadosEncontrados.length) return { resultados: null, df: null };
+
+            const df = dadosEncontrados.map(match => {
+                const row = {
+                    DataHora: dateFns.parse(match[1], 'dd/MM/yyyy HH:mm', new Date()),
+                    Dia: match[2],
+                    PostoHorario: match[3],
+                };
+                colunasDados.forEach((col, index) => {
+                    row[col.trim()] = parseNumber(match[4 + index]);
+                });
+
+                // Cálculo do Fator de Potência
+                const kwh = row['kWh fornecido'];
+                const kvarh_ind = row['kVArh indutivo'];
+                const kvarh_cap = row['kVArh capacitivo'];
+
+                if (kwh !== undefined && kvarh_ind !== undefined && kvarh_cap !== undefined) {
+                    if (kwh === 0 && kvarh_ind === 0 && kvarh_cap === 0) {
+                        row.fatorPotencia = { value: 1, type: 'capacitivo' }; // FP Unitário
+                    } else {
+                        const diff_kvarh_sq = Math.pow(kvarh_ind - kvarh_cap, 2);
+                        const kwh_sq = Math.pow(kwh, 2);
+                        const denominator = Math.sqrt(kwh_sq + diff_kvarh_sq);
+                        
+                        let fp_value = 1; // Default para 1 (unitário)
+                        if (denominator !== 0) {
+                            fp_value = Math.abs(kwh) / denominator;
+                        }
+
+                        row.fatorPotencia = {
+                            value: fp_value,
+                            type: (kvarh_ind > kvarh_cap) ? 'indutivo' : 'capacitivo'
+                        };
+                    }
+                }
+                return row;
+            });
+
+            const resultados = {};
+            for (const nomeColuna of colunasDados) {
+                const colTrimmed = nomeColuna.trim();
+                const operacao = (tipo === 'demanda' && colTrimmed.toUpperCase() !== "UFER") ? 'máximo' : 'soma';
+                
+                const calculo = df.reduce((acc, row) => {
+                    const posto = row.PostoHorario;
+                    if (!acc[posto]) {
+                        acc[posto] = (operacao === 'máximo') ? -Infinity : 0;
+                    }
+                    acc[posto] = (operacao === 'máximo') 
+                        ? Math.max(acc[posto], row[colTrimmed]) 
+                        : acc[posto] + row[colTrimmed];
+                    return acc;
+                }, {});
+
+                resultados[colTrimmed] = {
+                    operacao,
+                    valores: {
+                        'Fora Ponta': calculo['Fora Ponta'] === -Infinity ? 0.0 : (calculo['Fora Ponta'] || 0.0),
+                        'Ponta': calculo['Ponta'] === -Infinity ? 0.0 : (calculo['Ponta'] || 0.0),
+                        'Reservado': calculo['Reservado'] === -Infinity ? 0.0 : (calculo['Reservado'] || 0.0),
+                    }
+                };
+            }
+            return { resultados, df };
+        }
+
+        function processarDadosFaturamento(textoBruto) {
+            if (!textoBruto) return { consumo: null, demanda: null };
+
+            const resultados_consumo = {};
+            const resultados_demanda = {};
+            const postosHorarios = ['Fora Ponta', 'Ponta', 'Reservado'];
+
+            const mapaGrandezas = {
+                'kWh fornecido': 'kWh fornecido',
+                'kWh recebido': 'kWh recebido',
+                'kWh fornecido - Demanda máxima': 'kW fornecido',
+                'kWh recebido - Demanda máxima': 'kW recebido',
+                'UFER': 'UFER',
+                'DMCR': 'DMCR'
+            };
+
+            const postosPattern = /(Fora Ponta|Ponta|Reservado)\n([\s\S]*?)(?=\n\n|\Z|Dados gerais do faturamento|Fora Ponta|Ponta|Reservado)/g;
+            
+            for (const postoMatch of textoBruto.matchAll(postosPattern)) {
+                const posto = postoMatch[1];
+                const blocoDados = postoMatch[2];
+
+                for (const [nomeRelatorio, chaveInterna] of Object.entries(mapaGrandezas)) {
+                    const valorMatch = blocoDados.match(new RegExp(`^${nomeRelatorio.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s+([\\d.,-]+)`, "m"));
+                    if (valorMatch) {
+                        const valorNum = parseNumber(valorMatch[1]);
+                        
+                        if (['kWh fornecido', 'kWh recebido'].includes(chaveInterna)) {
+                            if (!resultados_consumo[chaveInterna]) {
+                                resultados_consumo[chaveInterna] = { operacao: 'soma', valores: {} };
+                            }
+                            resultados_consumo[chaveInterna].valores[posto] = valorNum;
+                        } else { 
+                            if (!resultados_demanda[chaveInterna]) {
+                                const operacao = chaveInterna === 'UFER' ? 'soma' : 'máximo';
+                                resultados_demanda[chaveInterna] = { operacao: operacao, valores: {} };
+                            }
+                            resultados_demanda[chaveInterna].valores[posto] = valorNum;
+                        }
+                    }
+                }
+            }
+            
+            for (const resDict of [resultados_consumo, resultados_demanda]) {
+                for (const grandeza in resDict) {
+                    for (const posto of postosHorarios) {
+                        if (!(posto in resDict[grandeza].valores)) {
+                            resDict[grandeza].valores[posto] = 0.0;
+                        }
+                    }
+                }
+            }
+
+            return { consumo: resultados_consumo, demanda: resultados_demanda };
+        }
+
+        function extrairInfoCliente(textoBruto) {
+            const info = { contrato: "Não encontrado", serial: "Não encontrado" };
+            if (!textoBruto) return info;
+
+            const contratoMatch = textoBruto.match(/Cliente \(contrato\)\s+(\d+)|Contrato\s+(\d+)/);
+            const serialMatch = textoBruto.match(/Medidor \(serial\)\s+(\d+)|Medidor\s+(\d+)|Serial do medidor\s+(\d+)/);
+
+            if (contratoMatch) info.contrato = contratoMatch[1] || contratoMatch[2] || "Não encontrado";
+            if (serialMatch) info.serial = serialMatch[1] || serialMatch[2] || serialMatch[3] || "Não encontrado";
+            
+            return info;
+        }
+
+        function extrairPeriodo(textoBruto, df) {
+            if (df && df.length > 0) {
+                const datas = df.map(row => row.DataHora);
+                const dataInicial = new Date(Math.min.apply(null, datas));
+                const dataFinal = new Date(Math.max.apply(null, datas));
+                return { dataInicial, dataFinal };
+            } else if (textoBruto) {
+                const inicioMatch = textoBruto.match(/Data inicial\s+(\d{2}\/\d{2}\/\d{4})/);
+                const finalMatch = textoBruto.match(/Data final\s+(\d{2}\/\d{2}\/\d{4})/);
+                if (inicioMatch && finalMatch) {
+                    const dataInicial = dateFns.parse(inicioMatch[1], 'dd/MM/yyyy', new Date());
+                    const dataFinal = dateFns.parse(finalMatch[1], 'dd/MM/yyyy', new Date());
+                    return { dataInicial, dataFinal };
+                }
+            }
+            return { dataInicial: null, dataFinal: null };
+        }
+
+        // --- LÓGICA DE VALIDAÇÃO ---
+        function validateInputs() {
+            const activeMainTab = document.querySelector('.main-tab-button.active').dataset.mainTab;
+            
+            if (activeMainTab === '2-medidores') {
+                const consumoAntigoTxt = document.getElementById('consumo_antigo').value;
+                const demandaAntigoTxt = document.getElementById('demanda_antigo').value;
+                const consumoNovoTxt = document.getElementById('consumo_novo').value;
+                const demandaNovoTxt = document.getElementById('demanda_novo').value;
+                const faturamentoAntigoTxt = document.getElementById('faturamento_antigo').value;
+                const faturamentoNovoTxt = document.getElementById('faturamento_novo').value;
+
+                const infosAntigo = [];
+                if(consumoAntigoTxt) infosAntigo.push(extrairInfoCliente(consumoAntigoTxt));
+                if(demandaAntigoTxt) infosAntigo.push(extrairInfoCliente(demandaAntigoTxt));
+                if(faturamentoAntigoTxt) infosAntigo.push(extrairInfoCliente(faturamentoAntigoTxt));
+
+                const infosNovo = [];
+                if(consumoNovoTxt) infosNovo.push(extrairInfoCliente(consumoNovoTxt));
+                if(demandaNovoTxt) infosNovo.push(extrairInfoCliente(demandaNovoTxt));
+                if(faturamentoNovoTxt) infosNovo.push(extrairInfoCliente(faturamentoNovoTxt));
+
+                // Valida dentro do grupo "Medidor Antigo"
+                const contratosAntigo = infosAntigo.map(info => info.contrato).filter(c => c !== "Não encontrado");
+                if (contratosAntigo.length > 1 && new Set(contratosAntigo).size > 1) {
+                    showMessage('error', `Contratos divergentes nos campos do Medidor Anterior: ${[...new Set(contratosAntigo)].join(', ')}.`);
+                    return false;
+                }
+                const seriaisAntigo = infosAntigo.map(info => info.serial).filter(s => s !== "Não encontrado");
+                if (seriaisAntigo.length > 1 && new Set(seriaisAntigo).size > 1) {
+                    showMessage('error', `Seriais divergentes nos campos do Medidor Anterior: ${[...new Set(seriaisAntigo)].join(', ')}.`);
+                    return false;
+                }
+
+                // Valida dentro do grupo "Medidor Novo"
+                const contratosNovo = infosNovo.map(info => info.contrato).filter(c => c !== "Não encontrado");
+                if (contratosNovo.length > 1 && new Set(contratosNovo).size > 1) {
+                    showMessage('error', `Contratos divergentes nos campos do Medidor Novo: ${[...new Set(contratosNovo)].join(', ')}.`);
+                    return false;
+                }
+                const seriaisNovo = infosNovo.map(info => info.serial).filter(s => s !== "Não encontrado");
+                if (seriaisNovo.length > 1 && new Set(seriaisNovo).size > 1) {
+                    showMessage('error', `Seriais divergentes nos campos do Medidor Novo: ${[...new Set(seriaisNovo)].join(', ')}.`);
+                    return false;
+                }
+                
+                // Valida se o contrato do medidor novo é o mesmo do antigo, se ambos existirem
+                const contratoFinalAntigo = contratosAntigo.length > 0 ? contratosAntigo[0] : null;
+                const contratoFinalNovo = contratosNovo.length > 0 ? contratosNovo[0] : null;
+                if(contratoFinalAntigo && contratoFinalNovo && contratoFinalAntigo !== contratoFinalNovo){
+                    showMessage('error', `Contratos divergentes entre Medidor Antigo (${contratoFinalAntigo}) e Medidor Novo (${contratoFinalNovo}).`);
+                    return false;
+                }
+
+                // Validações de data
+                const { df: dfConsumoAntigo } = processarDados(consumoAntigoTxt, 'consumo');
+                const { df: dfDemandaAntigo } = processarDados(demandaAntigoTxt, 'demanda');
+                const { df: dfConsumoNovo } = processarDados(consumoNovoTxt, 'consumo');
+                const { df: dfDemandaNovo } = processarDados(demandaNovoTxt, 'demanda');
+
+                const periodoAntigo = extrairPeriodo(faturamentoAntigoTxt, dfConsumoAntigo || dfDemandaAntigo);
+                const periodoNovo = extrairPeriodo(faturamentoNovoTxt, dfConsumoNovo || dfDemandaNovo);
+
+                window.alertaSobreposicao = false; // Reset flag
+                if (periodoAntigo.dataInicial && periodoNovo.dataInicial) {
+                    if (periodoAntigo.dataInicial.getTime() === periodoNovo.dataInicial.getTime()) {
+                        showMessage('error', 'A data de início do medidor novo não pode ser igual à do medidor antigo.');
+                        return false;
+                    }
+                    if (periodoNovo.dataInicial > periodoAntigo.dataInicial && periodoNovo.dataInicial < periodoAntigo.dataFinal) {
+                        window.alertaSobreposicao = true;
+                        showMessage('warning', 'Atenção: O período do medidor novo se sobrepõe ao período do medidor antigo.');
+                    }
+                }
+
+            } else { // Aba 1 Medidor
+                const allInfos = [];
+                const consumoTxt = document.getElementById('consumo_unico').value;
+                const demandaTxt = document.getElementById('demanda_unico').value;
+                const faturamentoTxt = document.getElementById('faturamento_unico').value;
+
+                if(consumoTxt) allInfos.push(extrairInfoCliente(consumoTxt));
+                if(demandaTxt) allInfos.push(extrairInfoCliente(demandaTxt));
+                if(faturamentoTxt) allInfos.push(extrairInfoCliente(faturamentoTxt));
+                
+                const contratos = allInfos.map(info => info.contrato).filter(c => c !== "Não encontrado");
+                if (contratos.length > 1 && new Set(contratos).size > 1) {
+                    showMessage('error', `Contratos divergentes encontrados: ${[...new Set(contratos)].join(', ')}.`);
+                    return false;
+                }
+                const seriais = allInfos.map(info => info.serial).filter(s => s !== "Não encontrado");
+                if (seriais.length > 1 && new Set(seriais).size > 1) {
+                    showMessage('error', `Seriais divergentes encontrados: ${[...new Set(seriais)].join(', ')}.`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // --- LÓGICA DE CÁLCULO PRINCIPAL ---
+        function handleCalculate() {
+            messagePlaceholder.innerHTML = '';
+            if (!validateInputs()) {
+                return; // Para a execução se a validação falhar
+            }
+
+            const activeMainTab = document.querySelector('.main-tab-button.active').dataset.mainTab;
+            if (activeMainTab === '2-medidores') {
+                handleCalculateTwoMeters();
+            } else {
+                handleCalculateOneMeter();
+            }
+        }
+
+        function handleCalculateTwoMeters() {
+            const consumoAntigoTxt = document.getElementById('consumo_antigo').value;
+            const demandaAntigoTxt = document.getElementById('demanda_antigo').value;
+            const consumoNovoTxt = document.getElementById('consumo_novo').value;
+            const demandaNovoTxt = document.getElementById('demanda_novo').value;
+            const faturamentoAntigoTxt = document.getElementById('faturamento_antigo').value;
+            const faturamentoNovoTxt = document.getElementById('faturamento_novo').value;
+            
+            let res_con_antigo, df_con_antigo, res_dem_antigo, df_dem_antigo;
+            let res_con_novo, df_con_novo, res_dem_novo, df_dem_novo;
+
+            if (consumoAntigoTxt || demandaAntigoTxt || consumoNovoTxt || demandaNovoTxt) {
+                ({ resultados: res_con_antigo, df: df_con_antigo } = processarDados(consumoAntigoTxt, 'consumo'));
+                ({ resultados: res_dem_antigo, df: df_dem_antigo } = processarDados(demandaAntigoTxt, 'demanda'));
+                ({ resultados: res_con_novo, df: df_con_novo } = processarDados(consumoNovoTxt, 'consumo'));
+                ({ resultados: res_dem_novo, df: df_dem_novo } = processarDados(demandaNovoTxt, 'demanda'));
+            } else if (faturamentoAntigoTxt || faturamentoNovoTxt) {
+                const fatAntigo = processarDadosFaturamento(faturamentoAntigoTxt);
+                res_con_antigo = fatAntigo.consumo;
+                res_dem_antigo = fatAntigo.demanda;
+                const fatNovo = processarDadosFaturamento(faturamentoNovoTxt);
+                res_con_novo = fatNovo.consumo;
+                res_dem_novo = fatNovo.demanda;
+            } else {
+                showMessage('warning', 'Por favor, cole o conteúdo em um dos campos de texto antes de calcular.');
+                return;
+            }
+
+            const tableData = [];
+            const postos = ['Ponta', 'Reservado', 'Fora Ponta'];
+            const grandezas_a_processar = [
+                { key: 'kWh fornecido', type: 'consumo', label: 'kWh fornecido acumulado' },
+                { key: 'kW fornecido', type: 'demanda', label: 'kW fornecido máximo' },
+                { key: 'UFER', type: 'demanda', label: 'UFER (ERE) acumulado' },
+                { key: 'DMCR', type: 'demanda', label: 'DMCR (DRE) máximo' },
+                { key: 'kWh recebido', type: 'consumo', label: 'kWh recebido acumulado' },
+                { key: 'kW recebido', type: 'demanda', label: 'kW recebido máximo' }
+            ];
+
+            const getParams = (medidorType, grandeza) => {
+                const constante = parseFloat(document.getElementById(`constante_${medidorType}`).value);
+                const tipo_opcao = document.querySelector(`input[name="tipo_${medidorType}"]:checked`).value;
+                const perdas_opcao = document.querySelector(`input[name="perdas_${medidorType}"]:checked`).value;
+                const perdas_multiplier = perdas_opcao === "Sim" ? 1.025 : 1.0;
+                const perdas_display = perdas_opcao === "Sim" ? 2.5 : 0.0;
+                let k_value = constante;
+                if (grandeza.startsWith("kW ")) {
+                    if (tipo_opcao === "Grandeza EAC") k_value = constante / 4;
+                    else if (tipo_opcao === "Pulso") k_value = constante * 4;
+                }
+                return { k_value, perdas_display, perdas_multiplier };
+            };
+
+            const getSumarizacao = (grandeza, val_antigo, val_novo) => {
+                return (grandeza.startsWith("kW ") || grandeza === "DMCR") ? Math.max(val_antigo, val_novo) : val_antigo + val_novo;
+            };
+
+            for (const item of grandezas_a_processar) {
+                const { key: grandeza, type: tipo_dado, label } = item;
+                const res_antigo = tipo_dado === 'consumo' ? res_con_antigo : res_dem_antigo;
+                const res_novo = tipo_dado === 'consumo' ? res_con_novo : res_dem_novo;
+                const existe_antigo = res_antigo && res_antigo[grandeza];
+                const existe_novo = res_novo && res_novo[grandeza];
+
+                if (existe_antigo || existe_novo) {
+                    tableData.push({ isSeparator: true, label });
+                    for (const posto of postos) {
+                        const val_antigo = existe_antigo ? (res_antigo[grandeza].valores[posto] || 0.0) : 0.0;
+                        const { k_value: k_antigo, perdas_display: perdas_antigo_display, perdas_multiplier: perdas_antigo_mult } = getParams('antigo', grandeza);
+                        const final_antigo = val_antigo * k_antigo * perdas_antigo_mult;
+                        const val_novo = existe_novo ? (res_novo[grandeza].valores[posto] || 0.0) : 0.0;
+                        const { k_value: k_novo, perdas_display: perdas_novo_display, perdas_multiplier: perdas_novo_mult } = getParams('novo', grandeza);
+                        const final_novo = val_novo * k_novo * perdas_novo_mult;
+                        const sumarizacao = getSumarizacao(grandeza, final_antigo, final_novo);
+                        tableData.push({ posto, val_antigo, k_antigo, perdas_antigo_display, final_antigo, val_novo, k_novo, perdas_novo_display, final_novo, sumarizacao });
+                    }
+                }
+            }
+
+            if (tableData.length > 0) {
+                 const infoAntigo = extrairInfoCliente(consumoAntigoTxt || demandaAntigoTxt || faturamentoAntigoTxt);
+                 const infoNovo = extrairInfoCliente(consumoNovoTxt || demandaNovoTxt || faturamentoNovoTxt);
+                 const contrato = infoAntigo.contrato !== "Não encontrado" ? infoAntigo.contrato : infoNovo.contrato;
+                 const periodoAntigo = extrairPeriodo(faturamentoAntigoTxt, df_con_antigo || df_dem_antigo);
+                 const periodoNovo = extrairPeriodo(faturamentoNovoTxt, df_con_novo || df_dem_novo);
+                 renderTwoMetersResults(tableData, contrato, infoAntigo.serial, infoNovo.serial, { df_con_antigo, df_dem_antigo, df_con_novo, df_dem_novo }, periodoAntigo, periodoNovo);
+                 resultsModal.classList.remove('hidden');
+            } else {
+                showMessage('error', 'Não foi possível encontrar dados válidos. Verifique o conteúdo colado.');
+            }
+        }
+
+        function handleCalculateOneMeter() {
+            const consumoTxt = document.getElementById('consumo_unico').value;
+            const demandaTxt = document.getElementById('demanda_unico').value;
+            const faturamentoTxt = document.getElementById('faturamento_unico').value;
+
+            let res_con, df_con, res_dem, df_dem;
+
+            if (consumoTxt || demandaTxt) {
+                ({ resultados: res_con, df: df_con } = processarDados(consumoTxt, 'consumo'));
+                ({ resultados: res_dem, df: df_dem } = processarDados(demandaTxt, 'demanda'));
+            } else if (faturamentoTxt) {
+                const fat = processarDadosFaturamento(faturamentoTxt);
+                res_con = fat.consumo;
+                res_dem = fat.demanda;
+            } else {
+                showMessage('warning', 'Por favor, cole o conteúdo em um dos campos de texto antes de calcular.');
+                return;
+            }
+
+            const tableData = [];
+            const postos = ['Ponta', 'Reservado', 'Fora Ponta'];
+            const grandezas_a_processar = [
+                { key: 'kWh fornecido', type: 'consumo', label: 'kWh fornecido acumulado' },
+                { key: 'kW fornecido', type: 'demanda', label: 'kW fornecido máximo' },
+                { key: 'UFER', type: 'demanda', label: 'UFER (ERE) acumulado' },
+                { key: 'DMCR', type: 'demanda', label: 'DMCR (DRE) máximo' },
+                { key: 'kWh recebido', type: 'consumo', label: 'kWh recebido acumulado' },
+                { key: 'kW recebido', type: 'demanda', label: 'kW recebido máximo' }
+            ];
+
+            const getParams = (grandeza) => {
+                const constante = parseFloat(document.getElementById('constante_unico').value);
+                const tipo_opcao = document.querySelector('input[name="tipo_unico"]:checked').value;
+                const perdas_opcao = document.querySelector('input[name="perdas_unico"]:checked').value;
+                const perdas_multiplier = perdas_opcao === "Sim" ? 1.025 : 1.0;
+                const perdas_display = perdas_opcao === "Sim" ? 2.5 : 0.0;
+                let k_value = constante;
+                if (grandeza.startsWith("kW ")) {
+                    if (tipo_opcao === "Grandeza EAC") k_value = constante / 4;
+                    else if (tipo_opcao === "Pulso") k_value = constante * 4;
+                }
+                return { k_value, perdas_display, perdas_multiplier };
+            };
+
+            for (const item of grandezas_a_processar) {
+                const { key: grandeza, type: tipo_dado, label } = item;
+                const res = tipo_dado === 'consumo' ? res_con : res_dem;
+                if (res && res[grandeza]) {
+                    tableData.push({ isSeparator: true, label });
+                    for (const posto of postos) {
+                        const val = res[grandeza].valores[posto] || 0.0;
+                        const { k_value: k, perdas_display, perdas_multiplier } = getParams(grandeza);
+                        const final = val * k * perdas_multiplier;
+                        tableData.push({ posto, val, k, perdas_display, final });
+                    }
+                }
+            }
+
+            if (tableData.length > 0) {
+                 const info = extrairInfoCliente(consumoTxt || demandaTxt || faturamentoTxt);
+                 const periodo = extrairPeriodo(faturamentoTxt, df_con || df_dem);
+                 renderSingleMeterResults(tableData, info.contrato, info.serial, { df_con, df_dem }, periodo);
+                 resultsModal.classList.remove('hidden');
+            } else {
+                showMessage('error', 'Não foi possível encontrar dados válidos. Verifique o conteúdo colado.');
+            }
+        }
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO E UI ---
+
+        let activeCharts = []; // Para destruir gráficos antigos
+        
+        function renderTwoMetersResults(tableData, contrato, serialAntigo, serialNovo, dataframes, periodoAntigo, periodoNovo) {
+            activeCharts.forEach(chart => chart.destroy());
+            activeCharts = [];
+
+            const formatadorData = (data) => data ? new Intl.DateTimeFormat('pt-BR').format(data) : 'N/A';
+            let periodoHtml = '<p class="text-center text-gray-600 mb-4">';
+            if (periodoAntigo.dataInicial || periodoNovo.dataInicial) {
+                let partes = [];
+                if (periodoAntigo.dataInicial) {
+                    partes.push(`Medidor Antigo: ${formatadorData(periodoAntigo.dataInicial)} a ${formatadorData(periodoAntigo.dataFinal)}`);
+                }
+                if (periodoNovo.dataInicial) {
+                    const dataInicioNovoFormatada = formatadorData(periodoNovo.dataInicial);
+                    const dataInicioNovoHtml = window.alertaSobreposicao 
+                        ? `<span class="text-red-600 font-bold">${dataInicioNovoFormatada}</span>` 
+                        : dataInicioNovoFormatada;
+                    partes.push(`Medidor Novo: ${dataInicioNovoHtml} a ${formatadorData(periodoNovo.dataFinal)}`);
+                }
+                periodoHtml += `Período: ${partes.join(' e ')}`;
+            }
+            periodoHtml += '</p>';
+
+            const tableHTML = `
+                <div id="captureTable" class="p-4 bg-white">
+                    <h3 class="text-center text-xl font-bold mb-2">Resultados para o Contrato: ${contrato}</h3>
+                    ${periodoHtml}
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Posto Horário</th>
+                                <th colspan="4" class="text-center">Medidor Anterior (${serialAntigo})</th>
+                                <th colspan="4" class="text-center thick-border-left">Medidor Novo (${serialNovo})</th>
+                                <th rowspan="2" class="thick-border-left">Sumarização</th>
+                            </tr>
+                            <tr>
+                                <th>Valor</th><th>K</th><th>Perdas (%)</th><th>Valor Final</th>
+                                <th class="thick-border-left">Valor</th><th>K</th><th>Perdas (%)</th><th>Valor Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => {
+                                if (row.isSeparator) {
+                                    return `<tr class="separator-row"><td colspan="10">${row.label}</td></tr>`;
+                                }
+                                return `
+                                    <tr>
+                                        <td>${row.posto}</td>
+                                        <td>${formatBR(row.val_antigo, 4)}</td>
+                                        <td>${formatBR(row.k_antigo, 4)}</td>
+                                        <td>${formatBR(row.perdas_antigo_display, 1)}</td>
+                                        <td>${formatBR(row.final_antigo, 4)}</td>
+                                        <td class="thick-border-left">${formatBR(row.val_novo, 4)}</td>
+                                        <td>${formatBR(row.k_novo, 4)}</td>
+                                        <td>${formatBR(row.perdas_novo_display, 1)}</td>
+                                        <td>${formatBR(row.final_novo, 4)}</td>
+                                        <td class="thick-border-left">${formatBR(row.sumarizacao, 4)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right my-4">
+                    <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('captureTable', this)">Copiar Tabela como Imagem</button>
+                </div>
+            `;
+
+            const chartContainersHTML = `<div id="charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6"></div>`;
+            modalContent.innerHTML = tableHTML + chartContainersHTML;
+            
+            const chartDefinitions = [
+                { id: 'consumo_antigo', title: 'Consumo (Medidor Anterior)', datasets: [ createChartData(dataframes.df_con_antigo, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con_antigo, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
+                { id: 'demanda_antigo', title: 'Demanda (Medidor Anterior)', datasets: [ createChartData(dataframes.df_dem_antigo, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem_antigo, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem_antigo, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem_antigo, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]},
+                { id: 'consumo_novo', title: 'Consumo (Medidor Novo)', datasets: [ createChartData(dataframes.df_con_novo, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con_novo, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
+                { id: 'demanda_novo', title: 'Demanda (Medidor Novo)', datasets: [ createChartData(dataframes.df_dem_novo, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem_novo, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem_novo, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem_novo, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]}
+            ];
+            renderCharts(chartDefinitions, dataframes);
+        }
+
+        function renderSingleMeterResults(tableData, contrato, serial, dataframes, periodo) {
+            activeCharts.forEach(chart => chart.destroy());
+            activeCharts = [];
+
+            const formatadorData = (data) => data ? new Intl.DateTimeFormat('pt-BR').format(data) : 'N/A';
+            const periodoHtml = periodo.dataInicial ? `<p class="text-center text-gray-600 mb-4">Período: ${formatadorData(periodo.dataInicial)} a ${formatadorData(periodo.dataFinal)}</p>` : '';
+
+            const tableHTML = `
+                <div id="captureTable" class="p-4 bg-white">
+                    <h3 class="text-center text-xl font-bold mb-2">Resultados para o Contrato: ${contrato} (Medidor: ${serial})</h3>
+                    ${periodoHtml}
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Posto Horário</th>
+                                <th>Valor</th>
+                                <th>K</th>
+                                <th>Perdas (%)</th>
+                                <th>Valor Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => {
+                                if (row.isSeparator) {
+                                    return `<tr class="separator-row"><td colspan="5">${row.label}</td></tr>`;
+                                }
+                                return `
+                                    <tr>
+                                        <td>${row.posto}</td>
+                                        <td>${formatBR(row.val, 4)}</td>
+                                        <td>${formatBR(row.k, 4)}</td>
+                                        <td>${formatBR(row.perdas_display, 1)}</td>
+                                        <td>${formatBR(row.final, 4)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right my-4">
+                    <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('captureTable', this)">Copiar Tabela como Imagem</button>
+                </div>
+            `;
+            const chartContainersHTML = `<div id="charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6"></div>`;
+            modalContent.innerHTML = tableHTML + chartContainersHTML;
+
+            const chartDefinitions = [
+                { id: 'consumo_unico', title: 'Consumo', datasets: [ createChartData(dataframes.df_con, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
+                { id: 'demanda_unico', title: 'Demanda', datasets: [ createChartData(dataframes.df_dem, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]}
+            ];
+            renderCharts(chartDefinitions, dataframes);
+        }
+        
+        function createChartData(df, yKey, label, color) {
+            if (!df || !yKey || !df.some(d => d[yKey] !== undefined)) return null;
+            return {
+                label,
+                data: df.map(item => ({ x: item.DataHora.getTime(), y: item[yKey] })),
+                borderColor: color,
+                tension: 0.1,
+                pointRadius: 0,
+                borderWidth: 2
+            };
+        }
+
+        function createFatorPotenciaChartData(df, label, color) {
+            if (!df || !df.some(d => d.fatorPotencia)) return null;
+            return {
+                label,
+                data: df.filter(d => d.fatorPotencia).map(item => {
+                    const fp = item.fatorPotencia;
+                    let yValue;
+                    // CORREÇÃO: Invertendo a lógica para o gráfico
+                    if (fp.type === 'capacitivo') {
+                        yValue = 1 + (1 - fp.value); // Mapeia para o intervalo [1, 2] (para cima)
+                    } else { // indutivo
+                        yValue = fp.value; // Mapeia para o intervalo [0, 1] (para baixo)
+                    }
+                    return { x: item.DataHora.getTime(), y: yValue };
+                }),
+                borderColor: color,
+                tension: 0.1,
+                pointRadius: 0, // CORREÇÃO: Removendo os pontos
+                borderWidth: 2
+            };
+        }
+
+        function renderCharts(chartDefinitions, dataframes) {
+            const chartsContainer = document.getElementById('charts-container');
+            const defaultOptions = {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'timeseries',
+                        grid: { 
+                            display: false
+                        },
+                        time: { 
+                            unit: 'day',
+                            tooltipFormat: 'dd/MM/yyyy HH:mm',
+                            displayFormats: { day: 'dd/MM' }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(new Date(value));
+                            }
+                        }
+                    },
+                    y: {
+                       grid: { 
+                           display: false
+                       }
+                    }
+                }
+            };
+            const pfOptions = {
+                ...defaultOptions,
+                scales: {
+                    ...defaultOptions.scales,
+                    y: {
+                        min: 0,
+                        max: 2,
+                        grid: {
+                           display: false
+                        },
+                        ticks: {
+                            stepSize: 0.1,
+                            callback: function(value) {
+                                const val = parseFloat(value.toFixed(1));
+                                if (val === 1) return '1.0';
+                                // CORREÇÃO: Invertendo os labels
+                                if (val < 1) return `${val.toFixed(1)} Ind`;
+                                if (val > 1) return `${(2 - val).toFixed(1)} Cap`;
+                                return '';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                const yValue = context.parsed.y;
+                                // CORREÇÃO: Invertendo os tooltips
+                                if (yValue <= 1) {
+                                    label += `${yValue.toFixed(4)} Indutivo`;
+                                } else {
+                                    label += `${(2 - yValue).toFixed(4)} Capacitivo`;
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    annotation: {
+                        annotations: {
+                            indutivoLine: {
+                                type: 'line',
+                                yMin: 0.92,
+                                yMax: 0.92,
+                                borderColor: 'rgb(255, 99, 132)',
+                                borderWidth: 2,
+                                borderDash: [6, 6],
+                                label: {
+                                    content: '0.92 Indutivo',
+                                    enabled: true,
+                                    position: 'start',
+                                    backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                                }
+                            },
+                            capacitivoLine: {
+                                type: 'line',
+                                yMin: 1.08, // 1 + (1 - 0.92)
+                                yMax: 1.08,
+                                borderColor: 'rgb(54, 162, 235)',
+                                borderWidth: 2,
+                                borderDash: [6, 6],
+                                label: {
+                                    content: '0.92 Capacitivo',
+                                    enabled: true,
+                                    position: 'start',
+                                    backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // Adiciona gráficos de FP se houver dados
+            if (dataframes.df_con_antigo || dataframes.df_dem_antigo) {
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_antigo, 'FP Medidor Antigo', 'purple');
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_antigo', title: 'Fator de Potência (Medidor Antigo)', datasets: [pfDataset], options: pfOptions });
+            }
+             if (dataframes.df_con_novo || dataframes.df_dem_novo) {
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_novo, 'FP Medidor Novo', 'orange');
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_novo', title: 'Fator de Potência (Medidor Novo)', datasets: [pfDataset], options: pfOptions });
+            }
+            if (dataframes.df_con || dataframes.df_dem) {
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con, 'Fator de Potência', 'purple');
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_unico', title: 'Fator de Potência', datasets: [pfDataset], options: pfOptions });
+            }
+
+
+            chartDefinitions.forEach(def => {
+                const validDatasets = def.datasets.filter(ds => ds !== null);
+                if (validDatasets.length > 0) {
+                    const chartWrapper = document.createElement('div');
+                    chartWrapper.innerHTML = `
+                        <div id="capture-${def.id}" class="p-4 bg-white border rounded-lg">
+                            <h3 class="text-center font-semibold mb-2">${def.title}</h3>
+                            <canvas id="canvas-${def.id}"></canvas>
+                        </div>
+                        <div class="text-right my-2">
+                           <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico como Imagem</button>
+                        </div>
+                    `;
+                    chartsContainer.appendChild(chartWrapper);
+
+                    const ctx = document.getElementById(`canvas-${def.id}`).getContext('2d');
+                    const newChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { datasets: validDatasets },
+                        options: def.options || defaultOptions
+                    });
+                    activeCharts.push(newChart);
+                }
+            });
+        }
+
+        function showMessage(type, message) {
+            const color = type === 'error' ? 'red' : 'yellow';
+            messagePlaceholder.innerHTML = `<div class="p-4 bg-${color}-100 border-l-4 border-${color}-500 text-${color}-700 rounded-md">${message}</div>`;
+        }
+        
+        function handleClear() {
+            document.querySelectorAll('textarea').forEach(ta => ta.value = '');
+            messagePlaceholder.innerHTML = '';
+        }
+
+        // --- EVENT LISTENERS ---
+        calculateBtn.addEventListener('click', handleCalculate);
+        clearBtn.addEventListener('click', handleClear);
+        closeModalBtn.addEventListener('click', () => resultsModal.classList.add('hidden'));
+        resultsModal.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                resultsModal.classList.add('hidden');
+            }
+        });
+
+        mainTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                mainTabButtons.forEach(btn => btn.classList.remove('active'));
+                mainTabContents.forEach(content => content.classList.remove('active'));
+                button.classList.add('active');
+                document.getElementById(`main-tab-${button.dataset.mainTab}`).classList.add('active');
+            });
+        });
+
+        dataTabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const parentNav = e.target.closest('nav');
+                parentNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const parentContent = parentNav.parentElement.nextElementSibling;
+                parentContent.querySelectorAll('.tab-content').forEach(content => {
+                    if (content.id !== `tab-${button.dataset.tab}`) {
+                        content.querySelectorAll('textarea').forEach(ta => ta.value = '');
+                    }
+                    content.classList.remove('active');
+                });
+                document.getElementById(`tab-${button.dataset.tab}`).classList.add('active');
+            });
+        });
+    });
+
+    // --- FUNÇÃO GLOBAL PARA COPIAR IMAGEM ---
+    function copyElementAsImage(elementId, button) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const originalText = button.innerText;
+        button.innerText = 'Copiando...';
+        button.disabled = true;
+
+        html2canvas(element, { 
+            scale: 2,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            canvas.toBlob(blob => {
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(() => {
+                    button.innerText = 'Copiado!';
+                }).catch(err => {
+                    console.error('Erro ao copiar:', err);
+                    button.innerText = 'Falha!';
+                }).finally(() => {
+                    setTimeout(() => {
+                        button.innerText = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                });
+            });
+        });
+    }
+    </script>
+</body>
+</html>
