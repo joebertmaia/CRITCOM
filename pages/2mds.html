@@ -39,6 +39,9 @@
         .results-table th {
             background-color: #f0f2f6;
         }
+        .results-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
         .thick-border-left {
             border-left: 2px solid #888;
         }
@@ -73,6 +76,18 @@
         .main-tab-content.active {
             display: block;
         }
+        /* Estilos para abas dentro do Modal */
+        .modal-tab-button.active {
+            border-color: #1d4ed8;
+            color: #1d4ed8;
+            background-color: #eff6ff;
+        }
+         .modal-tab-content {
+            display: none;
+        }
+        .modal-tab-content.active {
+            display: block;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,7 +99,7 @@
         
         <!-- Cabeçalho -->
         <header class="flex items-center gap-4 mb-6 pb-4 border-b">
-            <img src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQyOSIgaGVpZ2h0PSI0MjUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KCiA8ZyBjbGFzcz0ibGF5ZXIiIGRpc3BsYXk9ImlubGluZSI+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDxnIGlkPSJzdmdfMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjc1IC0yOTkuNTIpIHRyYW5zbGF0ZSgwIDI5OS41MikgdHJhbnNsYXRlKDQxLjc1IDApIHRyYW5zbGF0ZSgtNSAwKSB0cmFuc2xhdGUoMCAtMjk3LjMpIG1hdHJpeCgxIDAgMCAxIC02NS43NSAwKSI+CiAgIDxwYXRoIGQ9Im0yMjIuNTEsMjk3LjczYzUuNTEsMC4wMSAxMS4wMywwIDE2LjU0LDBjOS4yNiwtMC4wMSAxOC41MiwwIDI3Ljc4LDAuMDFjMTAuNiwwLjAxIDIxLjIxLDAuMDEgMzEuODIsLTAuMDFjOS4yLDAgMTguNCwtMC4wMSAyNy42LDBjNS40NSwwIDEwLjksMCAxNi4zNiwwYzE5LjkxLC0wLjAzIDM5LjhgMCA1OS42OCwxLjE4YzAuNywwLjA0IDEuMzksMC4wOCAyLjEsMC4xMmMyOC4zNywxLjcgNTIuMTQsMTAuOTcgNzEuNzMsMzIuMjdjMjAuMTcsMjMuOTYgMjMuMDQsNTEuODEgMjMuMDMsODEuOTVjMCwyLjE0IDAsNC4yOCAwLjAxLDYuNDJjMC4wMSw1Ljc4IDAuMDEsMTEuNTYgMC4wMSwxNy4zNWMwLDMuNjIgMCw3LjI1IDAsMTAuODhjMC4wMSwxMi42OCAwLjAyLDI1LjM3IDAuMDIsMzguMDVjMCwxMS43NyAwLjAxLDIzLjUzIDAuMDIsMzUuMjljMC4wMiwxMC4xNSAwLjAyLDIwLjI5IDAuMDIsMzAuNDRjMCw2LjA0IDAsMTIuMDggMC4wMSwxOC4xMWMwLjAxLDUuNyAwLjAxLDExLjM5IDAuMDEsMTcuMDljMCwyLjA2IDAsNC4xMyAwLDYuMmMwLjExLDM3Ljk4IC0yLjU4LDczLjk1IC0zMC41NywxMDIuMjdjLTE0LjA4LDEzLjA5IC0zMi4wOSwyMS4yNiAtNTAuOTMsMjQuMzRjLTAuNzIsMC4xMiAtMS40NSwwLjI0IC0yLjIsMC4zNmMtMTQuOSwyLjIzIC0zMC4wMSwyLjEgLTQ1LjA0LDIuMDljLTIuMTIsMC4wMSAtNC4yNCwwLjAxIC02LjM1LDAuMDFjLTUuNywwLjAxIC0xMS40MSwwLjAyIC0xNy4xMSwwLjAyYy0zLjU3LDAgLTcuMTUsMCAtMTAuNzIsMGMtMTIuNTEsMC4wMSAtMjUuMDIsMC4wMSAtMzcuNTIsMC4wMWMtMTEuNiwwIC0yMy4yMSwwLjAxIC0zNC44MSwwLjAzYy0xMC4wMSwwLjAxIC0yMC4wMiwwLjAyIC0zMC4wMiwwLjAyYy01Ljk2LDAgLTExLjkyLDAgLTE3Ljg3LDAuMDFjLTUuNjEsMC4wMSAtMTEuMjIsMC4wMSAtMTYuODMsMGMtMi4wNCwwIC00LjA4LDAgLTYuMTIsMC4wMWMtMTAuMTksMC4wMyAtMjAuMjgsLTAuMTkgLTMwLjQzLC0xLjEzYy0wLjgzLC0wLjA4IC0xLjY3LC0wLjE2IC0yLjUzLC0wLjI0Yy0yNi4xMiwtMi42OCAtNDkuMTksLTE0Ljc1IC02Ni4yLC0zNC44OGMtMjYuMSwtMzMuOTQgLTIzLjE3LC03OC4xNCAtMjMuMTMsLTExOC42NWMwLC0zLjk1IDAsLTcuOTEgMCwtMTEuODZjLTAuMDEsLTYuNjcgMCwtMTMuMzQgMCwtMjAuMDJjMC4wMSwtNi43MSAwLjAxLC0xMy40MSAwLC0yMC4xMmMtMC4wMiwtMzIuNCAtMC4wMiwtNjQuOCAwLjQsLTk3LjE5YzAuMDQsLTIuNTMgMC4wNiwtNS4wNiAwLjA5LC03LjU5YzAuMjcsLTI5LjY5IDMuOTUsLTU4LjgzIDI1Ljg0LC04MC44M2MwLjkzLC0wLjkxIDEuODUsLTEuODEgMi44LC0yLjc0YzEuMjgsLTEuMzEgMS4yOCwtMS4zMSAyLjU4LC0yLjY1YzEwLjgxLC0xMC41NCAyNC4wNCwtMTcuMDcgMzguNDIsLTIxLjM1YzAuOTQsLTAuMyAxLjg4LC0wLjU5IDIuODUsLTAuOWMyNC45LC02LjggNTMuMTEsLTQuNCA3OC42NiwtNC4zN3oiIGZpbGw9IiMwMDQxNkEiIGlkPSJvYmplY3QtMCIvPgogICA8cGF0aCBkPSJtMzgwLjIxLDM5My40NmMyMC41MiwxOC43MSAyMC41MiwxOC43MSAyNC43OSwyNy41NGMtMC4yNSwyLjg4IC0wLjU1LDQuNSAtMi41Miw2LjY2Yy0wLjY0LDAuNDkgLTEuMjksMC45NyAtMS45NiwxLjQ3Yy0wLjcyLDAuNTUgLTEuNDUsMS4xMSAtMi4yLDEuNjhjLTEuMTgsMC44NyAtMS4xOCwwLjg3IC0yLjM5LDEuNzVjLTAuOCwwLjYxIC0xLjYxLDEuMjIgLTIuNDMsMS44NGMtMS42NywxLjI2IC0zLjM1LDIuNTEgLTUuMDIsMy43NWMtMi4zNiwxLjc1IC00LjY5LDMuNTIgLTcuMDMsNS4yOWMtNy4wMSw1LjMxIC03LjAxLDUuMzEgLTkuNzcsNy4zM2MtMS42MiwxLjE4IC0zLjIzLDIuNDEgLTQuODMsMy42M2MtMi44NSwxLjYgLTIuODUsMS42IC01LjMyLDEuNzljLTMuOTQsLTEuODUgLTYuMjksLTQuOTMgLTkuMSwtOC4xOWMtMTQuMDIsLTE1LjU1IC0zMi4wNCwtMjYuNTkgLTUzLjM0LC0yOC4yMmMtMjQuODUsLTEuMjQgLTQ2LjEyLDQuNjIgLTY1LjA5LDIxLjIyYy0xNS42NywxNC43NSAtMjUuMzMsMzUuNTUgLTI2LjI5LDU3LjA2Yy0wLjY1LDI1LjE4IDYuMDQsNDguMDYgMjMuMjksNjYuOTRjMTMuMTEsMTMuNjkgMzIuMTEsMjIuOTYgNTEsMjVjNS45NiwwLjA3IDExLjkyLC0wLjE5IDE3Ljg4LC0wLjUyYzYsLTAuMTYgMTAuMDYsLTAuMjYgMTQuNywzLjgzYzEuMTYsMS4yMSAyLjMsMi40NCAzLjQyLDMuNjljMS40NCwxLjE1IDIuODksMi4yOCA0LjM3LDMuMzdjMC42NSwwLjQ5IDEuMjksMC45NyAxLjk2LDEuNDdjMy42NiwyLjU1IDcuMzIsMi43OSAxMS42NywyLjE2YzQuNTksLTIgNy45MSwtNC40NSAxMS41NiwtNy44NmMwLjUxLC0wLjQ4IDEuMDMsLTAuOTYgMS41NSwtMS40NWMzLjg5LC0zLjY2IDcuNjMsLTcuNDQgMTEuMzUsLTExLjI3YzAuNTMsLTAuNTUgMS4wNywtMS4xIDEuNjIsLTEuNjZjMi4xOCwtMi4yNSA0LjM2LC00LjQ5IDYuNTIsLTYuNzZjMS42LC0xLjY5IDMuMjMsLTMuMzUgNC44NiwtNS4wMmMwLjczLC0wLjc3IDAuNzMsLTAuNzcgMS40NiwtMS41NmMxLjQsLTEuNDEgMS40LC0xLjA4LTMuNDJjMy44MywwLjE1IDUuNzYsMS4yNyA4LjUsMy44N2MyLjU2LDIuMzggNS4xNCw0LjY4IDcuODcsNi44NmMwLjU4LDAuNDggMS4xNywwLjk2IDEuNzgsMS40NWMxLjE3LDAuOTUgMi4zNSwxLjg5IDMuNTQsMi44MmMyLjQ3LDIuMDIgNC4xNCwzLjU5IDUuMzMsNi41N2MtMC4wOSw4LjAyIC05Ljg3LDE2IC0xNS4wMiwyMS40M2MtMC44NCwwLjkgLTEuNjgsMS44IC0yLjU0LDIuNzNjLTIyLjg4LDIzLjg5IC01Ni4yNCwzNy42MSAtODkuMjMsMzguNDdjLTI3Ljk4LDAuMzUgLTUyLjY2LC00LjQgLTc3LjIzLC0xOC4yYy0xLjEyLC0wLjYzIC0yLjI0LC0xLjI1IC0zLjM5LC0xLjljLTMxLjgyLC0xOC43OSAtNTQuNTIsLTQ4LjUxIC02My45NywtODQuMjdjLTAuNTcsLTIuMjcgLTEuMTEsLTQuNTUgLTEuNjQsLTYuODNjLTAuMTcsLTAuNjkgLTAuMzQsLTEuMzcgLTAuNTEsLTIuMDhjLTUsLTIxLjYxIC0zLjc3LC00NS4yOSAwLjUxLC02Ni45MmMwLjE1LC0wLjc2IDAuMywtMS41MyAwLjQ1LC0yLjMxYzQuMjcsLTIwLjMxIDE0LjIxLC0zOC45MyAyNy41NSwtNTQuNjljMS4xNywtMS40MSAxLjE3LC0xLjQxIDIuMzcsLTIuODVjMjIuMjEsLTI1LjYyIDU1Ljk4LC00NC4xNCA5MC4wNywtNDYuOWMzOC45OCwtMi4zOCA3Ni40Nyw1LjM0IDEwNi43NywzMS4yMXoiIGZpbGw9IiNGREZDRjciIGlkPSJvYmplY3QtMSIvPgogICA8cGF0aCBkPSJtNDA1LjM2LDQ3OS4yOGM0LjMyLDEuMTggNi44Nyw0LjE1IDkuOTYsNy4yOWMwLjY0LDAuNiAxLjI5LDEuMjEgMS45NSwxLjg0YzMuMTksMy4xOSA0LjYyLDQuNzkgNS4yOSw5LjM2Yy0wLjcxLDQuMTYgLTIuNjUsNi4zOCAtNS41Niw5LjIzYy00LjE0LDQuMTMgLTguMjUsOC4yOSAtMTIuMzUsMTIuNDZjLTcuMzUsNy40NCAtMTQuNzEsMTQuODcgLTIyLjA4LDIyLjI5Yy00LjQ2LDQuNDkgLTguOTEsOC45OCAtMTMuMzQsMTMuNDhjLTQuMyw0LjM3IC04LjYxLDguNzIgLTEyLjk0LDEzLjA1Yy0xLjY0LDEuNjYgLTMuMjgsMy4zMiAtNC45MSw0Ljk5Yy0yLjI5LDIuMzIgLTQuNTgsNC42MyAtNi44OSw2LjkzYy0wLjY3LDAuNjkgLTEuMzQsMS4zOCAtMi4wMywyLjFjLTQuNjEsNC41NCAtNC42MSw0LjU0IC04LjY5LDUuMzJjLTMuMDgsLTAuNjkgLTQuMjcsLTEuMzggLTYuNDYsLTMuNjFjLTAuNjUsLTAuNjYgLTEuMzEsLTEuMzEgLTEuOTksLTEuOTljLTAuNjksLTAuNzEgLTEuMzgsLTEuNDMgLTIuMDksLTIuMTdjLTAuNzMsLTAuNzQgLTEuNDYsLTEuNDcgLTIuMjEsLTIuMjNjLTIuMzMsLTIuMzYgLTQuNjQsLTQuNzQgLTYuOTUsLTcuMTJjLTEuNTUsLTEuNTcgLTMuMSwtMy4xNCAtNC42NiwtNC43MWMtNi4xNCwtNi4yMyAtMTIuMjIsLTEyLjQ3IC0xNy45NCwtMTkuMWMtMS4xOSwtMS4zNyAtMi40MywtMi43MSAtMy42OCwtNC4wNGMtMC44NSwtMC45MSAtMC44NSwtMC45MSAtMS43MiwtMS44M2MtMC41OSwtMC42MiAtMS4xOCwtMS4yMyAtMS43OCwtMS44NmMtMS4yOSwtMS45NiAtMS4yOSwtMS45NiAtMS44OSwtNC4yNGMwLjk5LC00LjQzIDQuMDUsLTYuOTMgNy4yMywtMTAuMDNjMC42MiwtMC42NSAxLjIzLC0xLjI5IDEuODcsLTEuOTVjMi44NSwtMi44NCA0LjY4LC00LjU1IDguNjUsLTUuNDdjMy44MSwwLjk4IDUuMTQsMi44OSA3Ljg1LDUuNzNjMC45OSwwLjk5IDEuOTcsMS45NyAyLjk2LDIuOTZjNy42OCw3LjY4IDE1LjM2LDE1LjM2IDIzLjA0LDIzLjA0YzUuMDgsLTQuMjUgOS44NCwtOC42OCAxNC41LC0xMy4zN2MwLjk0LC0wLjkzIDAuOTQsLTAuOTMgMS45LC0xLjg5YzAuOTMsLTAuOTMgMC45MywtMC45MyAxLjg5LC0xLjg5YzAuNTQsLTAuNTQgMS4wOSwtMS4wOSAxLjY1LC0xLjY2YzEuODIsLTEuOTMgMy41NSwtMy45IDUuMjksLTUuOTFjMy44LC00LjM3IDcuODMsLTguNDYgMTEuOTQsLTEyLjU0YzAuNzUsLTAuNzUgMS41MSwtMS41MSAyLjI5LC0yLjI4YzIuMzksLTIuMzkgNC43OCwtNC43NyA3LjE3LC03LjE0YzEuNjEsLTEuNjEgMy4yMiwtMy4yMiA0Ljg0LC00LjgzYzcuMjMsLTcuMjIgNy4yMywtNy4yMiAxMC43OSwtMTAuNzRjMS4wOSwtMS4xIDIuMTgsLTIuMiAzLjI2LC0zLjMyYzMuMjUsLTMuMzUgMy4yNSwtMy4zNSA1Ljg0LC00LjE1eiIgZmlsbD0iIzREQkU2NiIgaWQ9Im9iamVjdC0yIi8+CiAgPC9nPgogPC9nPgo8L3N2Zz4=' alt="CRITCOM Logo" class="h-12">
+            <img src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQyOSIgaGVpZ2h0PSI0MjUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KCiA8ZyBjbGFzcz0ibGF5ZXIiIGRpc3BsYXk9ImlubGluZSI+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDxnIGlkPSJzdmdfMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjc1IC0yOTkuNTIpIHRyYW5zbGF0ZSgwIDI5OS41MikgdHJhbnNsYXRlKDQxLjc1IDApIHRyYW5zbGF0ZSgtNSAwKSB0cmFuc2xhdGUoMCAtMjk3LjMpIG1hdHJpeCgxIDAgMCAxIC02NS43NSAwKSI+CiAgIDxwYXRoIGQ9Im0yMjIuNTEsMjk3LjczYzUuNTEsMC4wMSAxMS4wMywwIDE2LjU0LDBjOS4yNiwtMC4wMSAxOC41MiwwIDI3Ljc4LDAuMDFjMTAuNiwwLjAxIDIxLjIxLDAuMDEgMzEuODIsLTAuMDFjOS4yLDAgMTguNCwtMC4wMSAyNy42LDBjNS40NSwwIDEwLjksMCAxNi4zNiwwYzE5LjkxLC0wLjAzIDM5LjhgMCA1OS42OCwxLjE4YzAuNywwLjA0IDEuMzksMC4wOCAyLjEsMC4xMmMyOC4zNywxLjcgNTIuMTQsMTAuOTcgNzEuNzMsMzIuMjdjMjAuMTcsMjMuOTYgMjMuMDQsNTEuODEgMjMuMDMsODEuOTVjMCwyLjE0IDAsNC4yOCAwLjAxLDYuNDJjMC4wMSw1Ljc4IDAuMDEsMTEuNTYgMC4wMSwxNy4zNWMwLDMuNjIgMCw3LjI1IDAsMTAuODhjMC4wMSwxMi42OCAwLjAyLDI1LjM3IDAuMDIsMzguMDVjMCwxMS43NyAwLjAxLDIzLjUzIDAuMDIsMzUuMjljMC4wMiwxMC4xNSAwLjAyLDIwLjI5IDAuMDIsMzAuNDRjMCw2LjA0IDAsMTIuMDggMC4wMSwxOC4xMWMwLjAxLDUuNyAwLjAxLDExLjM5IDAuMDEsMTcuMDljMCwyLjA2IDAsNC4xMyAwLDYuMmMwLjExLDM3Ljk4IC0yLjU4LDczLjk1IC0zMC41NywxMDIuMjdjLTE0LjA4LDEzLjA5IC0zMi4wOSwyMS4yNiAtNTAuOTMsMjQuMzRjLTAuNzIsMC4xMiAtMS40NSwwLjI0IC0yLjIsMC4zNmMtMTQuOSwyLjIzIC0zMC4wMSwyLjEgLTQ1LjA0LDIuMDljLTIuMTIsMC4wMSAtNC4yNCwwLjAxIC02LjM1LDAuMDFjLTUuNywwLjAxIC0xMS40MSwwLjAyIC0xNy4xMSwwLjAyYy0zLjU3LDAgLTcuMTUsMCAtMTAuNzIsMGMtMTIuNTEsMC4wMSAtMjUuMDIsMC4wMSAtMzcuNTIsMC4wMWMtMTEuNiwwIC0yMy4yMSwwLjAxIC0zNC44MSwwLjAzYy0xMC4wMSwwLjAxIC0yMC4wMiwwLjAyIC0zMC4wMiwwLjAyYy01Ljk2LDAgLTExLjkyLDAgLTE3Ljg3LDAuMDFjLTUuNjEsMC4wMSAtMTEuMjIsMC4wMSAtMTYuODMsMGMtMi4wNCwwIC00LjA4LDAgLTYuMTIsMC4wMWMtMTAuMTksMC4wMyAtMjAuMjgsLTAuMTkgLTMwLjQzLC0xLjEzYy0wLjgzLC0wLjA4IC0xLjY3LC0wLjE2IC0yLjUzLC0wLjI0Yy0yNi4xMiwtMi42OCAtNDkuMTksLTE0Ljc1IC02Ni4yLC0zNC44OGMtMjYuMSwtMzMuOTQgLTIzLjE3LC03OC4xNCAtMjMuMTMsLTExOC42NWMwLC0zLjk1IDAsLTcuOTEgMCwtMTEuODZjLTAuMDEsLTYuNjcgMCwtMTMuMzQgMCwtMjAuMDJjMC4wMSwtNi43MSAwLjAxLC0xMy40MSAwLC0yMC4xMmMtMC4wMiwtMzIuNCAtMC4wMiwtNjQuOCAwLjQsLTk3LjE5YzAuMDQsLTIuNTMgMC4wNiwtNS4wNiAwLjA5LC03LjU5YzAuMjcsLTI5LjA5IDMuOTUsLTU4LjgzIDI1Ljg0LC04MC44M2MwLjkzLC0wLjkxIDEuODUsLTEuODEgMi44LC0yLjc0YzEuMjgsLTEuMzEgMS4yOCwtMS4zMSAyLjU4LC0yLjY1YzEwLjgxLC0xMC41NCAyNC4wNCwtMTcuMDcgMzguNDIsLTIxLjM1YzAuOTQsLTAuMyAxLjg4LC0wLjU5IDIuODUsLTAuOWMyNC45LC02LjggNTMuMTEsLTQuNCA3OC42NiwtNC4zN3oiIGZpbGw9IiMwMDQxNkEiIGlkPSJvYmplY3QtMCIvPgogICA8cGF0aCBkPSJtMzgwLjIxLDM5My40NmMyMC41MiwxOC43MSAyMC41MiwxOC43MSAyNC43OSwyNy41NGMtMC4yNSwyLjg4IC0wLjU1LDQuNSAtMi41Miw2LjY2Yy0wLjY0LDAuNDkgLTEuMjksMC45NyAtMS45NiwxLjQ3Yy0wLjcyLDAuNTUgLTEuNDUsMS4xMSAtMi4yLDEuNjhjLTEuMTgsMC44NyAtMS4xOCwwLjg3IC0yLjM5LDEuNzVjLTAuOCwwLjYxIC0xLjYxLDEuMjIgLTIuNDMsMS44NGMtMS42NywxLjI2IC0zLjM1LDIuNTEgLTUuMDIsMy43NWMtMi4zNiwxLjc1IC00LjY5LDMuNTIgLTcuMDMsNS4yOWMtNy4wMSw1LjMxIC03LjAxLDUuMzEgLTkuNzcsNy4zM2MtMS42MiwxLjE4IC0zLjIzLDIuNDEgLTQuODMsMy42M2MtMi44NSwxLjYgLTIuODUsMS42IC01LjMyLDEuNzljLTMuOTQsLTEuODUgLTYuMjksLTQuOTMgLTkuMSwtOC4xOWMtMTQuMDIsLTEuNTU1IC0zMi4wNCwtMjYuNTkgLTUzLjM0LC0yOC4yMmMtMjQuODUsLTEuMjQgLTQ2LjEyLDQuNjIgLTY1LjA5LDIxLjIyYy0xNS42NywxNC43NSAtMjUuMzMsMzUuNTUgLTI2LjI5LDU3LjA2Yy0wLjY1LDI1LjE4IDYuMDQsNDguMDYgMjMuMjksNjYuOTRjMTMuMTEsMTMuNjkgMzIuMTEsMjIuOTYgNTEsMjVjNS45NiwwLjA3IDExLjkyLC0wLjE5IDE3Ljg4LC0wLjUyYzYsLTAuMTYgMTAuMDYsLTAuMjYgMTQuNywzLjgzYzEuMTYsMS4yMSAyLjMsMi40NCAzLjQyLDMuNjljMS40NCwxLjE1IDIuODksMi4yOCA0LjM3LDMuMzdjMC42NSwwLjQ5IDEuMjksMC45NyAxLjk2LDEuNDdjMy42NiwyLjU1IDcuMzIsMi43OSAxMS42NywyLjE2YzQuNTksLTIgNy45MSwtNC40NSAxMS41NiwtNy44NmMwLjUxLC0wLjQ4IDEuMDMsLTAuOTYgMS41NSwtMS40NWMzLjg5LC0zLjY2IDcuNjMsLTcuNDQgMTEuMzUsLTExLjI3YzAuNTMsLTAuNTUgMS4wNywtMS4xIDEuNjIsLTEuNjZjMi4xOCwtMi4yNSA0LjM2LC00LjQ5IDYuNTIsLTYuNzZjMS42LC0xLjY5IDMuMjMsLTMuMzUgNC44NiwtNS4wMmMwLjczLC0wLjc3IDAuNzMsLTAuNzcgMS40NiwtMS41NmMxLjQsLTEuNDEgMS40LC0xLjA4LTMuNDJjMy44MywwLjE1IDUuNzYsMS4yNyA4LjUsMy44N2MyLjU2LDIuMzggNS4xNCw0LjY4IDcuODcsNi44NmMwLjU4LDAuNDggMS4xNywwLjk2IDEuNzgsMS40NWMxLjE3LDAuOTUgMi4zNSwxLjg5IDMuNTQsMi44MmMyLjQ3LDIuMDIgNC4xNCwzLjU5IDUuMzMsNi41N2MtMC4wOSw4LjAyIC05Ljg3LDE2IC0xNS4wMiwyMS40M2MtMC44NCwwLjkgLTEuNjgsMS44IC0yLjU0LDIuNzNjLTIyLjg4LDIzLjg5IC01Ni4yNCwzNy42MSAtODkuMjMsMzguNDdjLTI3Ljk4LDAuMzUgLTUyLjY2LC00LjQgLTc3LjIzLC0xOC4yYy0xLjEyLC0wLjYzIC0yLjI0LC0xLjI1IC0zLjM5LC0xLjljLTMxLjgyLC0xOC43OSAtNTQuNTIsLTQ4LjUxIC02My45NywtODQuMjdjLTAuNTcsLTIuMjcgLTEuMTEsLTQuNTUgLTEuNjQsLTYuODNjLTAuMTcsLTAuNjkgLTAuMzQsLTEuMzcgLTAuNTEsLTIuMDhjLTUsLTIxLjYxIC0zLjc3LC00NS4yOSAwLjUxLC02Ni45MmMwLjE1LC0wLjc2IDAuMywtMS41MyAwLjQ1LC0yLjMxYzQuMjcsLTIwLjMxIDE0LjIxLC0zOC45MyAyNy41NSwtNTQuNjljMS4xNywtMS40MSAxLjE3LC0xLjQxIDIuMzcsLTIuODVjMjIuMjEsLTI1LjYyIDU1Ljk4LC00NC4xNCA5MC4wNywtNDYuOWMzOC45OCwtMi4zOCA3Ni40Nyw1LjM0IDEwNi43NywzMS4yMXoiIGZpbGw9IiNGREZDRjciIGlkPSJvYmplY3QtMSIvPgogICA8cGF0aCBkPSJtNDA1LjM2LDQ3OS4yOGM0LjMyLDEuMTggNi44Nyw0LjE1IDkuOTYsNy4yOWMwLjY0LDAuNiAxLjI5LDEuMjEgMS45NSwxLjg0YzMuMTksMy4xOSA0LjYyLDQuNzkgNS4yOSw5LjM2Yy0wLjcxLDQuMTYgLTIuNjUsNi4zOCAtNS41Niw5LjIzYy00LjE0LDQuMTMgLTguMjUsOC4yOSAtMTIuMzUsMTIuNDZjLTcuMzUsNy40NCAtMTQuNzEsMTQuODcgLTIyLjA4LDIyLjI5Yy00LjQ2LDQuNDkgLTguOTEsOC45OCAtMTMuMzQsMTMuNDhjLTQuMyw0LjM3IC04LjYxLDguNzIgLTEyLjk0LDEzLjA1Yy0xLjY0LDEuNjYgLTMuMjgsMy4zMiAtNC45MSw0Ljk5Yy0yLjI5LDIuMzIgLTQuNTgsNC42MyAtNi44OSw2LjkzYy0wLjY3LDAuNjkgLTEuMzQsMS4zOCAtMi4wMywyLjFjLTQuNjEsNC41NCAtNC42MSw0LjU0IC04LjY5LDUuMzJjLTMuMDgsLTAuNjkgLTQuMjcsLTEuMzggLTYuNDYsLTMuNjFjLTAuNjUsLTAuNjYgLTEuMzEsLTEuMzEgLTEuOTksLTEuOTljLTAuNjksLTAuNzEgLTEuMzgsLTEuNDMgLTIuMDksLTIuMTdjLTAuNzMsLTAuNzQgLTEuNDYsLTEuNDcgLTIuMjEsLTIuMjNjLTIuMzMsLTIuMzYgLTQuNjQsLTQuNzQgLTYuOTUsLTcuMTJjLTEuNTUsLTEuNTcgLTMuMSwtMy4xNCAtNC42NiwtNC43MWMtNi4xNCwtNi4yMyAtMTIuMjIsLTEyLjQ3IC0xNy45NCwtMTkuMWMtMS4xOSwtMS4zNyAtMi40MywtMi43MSAtMy42OCwtNC4wNGMtMC44NSwtMC45MSAtMC44NSwtMC45MSAtMS43MiwtMS44M2MtMC41OSwtMC42MiAtMS4xOCwtMS4yMyAtMS43OCwtMS44NmMtMS4yOSwtMS45NiAtMS4yOSwtMS45NiAtMS44OSwtNC4yNGMwLjk5LC00LjQzIDQuMDUsLTYuOTMgNy4yMywtMTAuMDNjMC42MiwtMC42NSAxLjIzLC0xLjI5IDEuODcsLTEuOTVjMi44NSwtMi44NCA0LjY4LC00LjU1IDguNjUsLTUuNDdjMy44MSwwLjk4IDUuMTQsMi44OSA3Ljg1LDUuNzNjMC45OSwwLjk5IDEuOTcsMS45NyAyLjk2LDIuOTZjNy42OCw3LjY4IDE1LjM2LDE1LjM2IDIzLjA0LDIzLjA0YzUuMDgsLTQuMjUgOS44NCwtOC42OCAxNC41LC0xMy4zN2MwLjk0LC0wLjkzIDAuOTQsLTAuOTMgMS45LC0xLjg5YzAuOTMsLTAuOTMgMC45MywtMC45MyAxLjg5LC0xLjg5YzAuNTQsLTAuNTQgMS4wOSwtMS4wOSAxLjY1LC0xLjY2YzEuODIsLTEuOTMgMy41NSwtMy45IDUuMjksLTUuOTFjMy44LC00LjM3IDcuODMsLTguNDYgMTEuOTQsLTEyLjU0YzAuNzUsLTAuNzUgMS41MSwtMS41MSAyLjI5LC0yLjI4YzIuMzksLTIuMzkgNC43OCwtNC43NyA3LjE3LC03LjE0YzEuNjEsLTEuNjEgMy4yMiwtMy4yMiA0Ljg0LC00LjgzYzcuMjMsLTcuMjIgNy4yMywtNy4yMiAxMC43OSwtMTAuNzRjMS4wOSwtMS4xIDIuMTgsLTIuMiAzLjI2LC0zLjMyYzMuMjUsLTMuMzUgMy4yNSwtMy4zNSA1Ljg0LC00LjE1eiIgZmlsbD0iIzREQkU2NiIgaWQ9Im9iamVjdC0yIi8+CiAgPC9nPgogPC9nPgo8L3N2Zz4=' alt="CRITCOM Logo" class="h-12">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">CRITCOM</h1>
         </header>
 
@@ -94,6 +109,8 @@
                 <nav class="-mb-px flex space-x-4" aria-label="Main Tabs">
                     <button class="main-tab-button active whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="1-medidor">1 Medidor</button>
                     <button class="main-tab-button whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="2-medidores">2 Medidores</button>
+                    <button class="main-tab-button whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="pla-win">PLA-WIN</button>
+                    <button class="main-tab-button whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-base rounded-t-lg text-gray-500 hover:text-blue-700" data-main-tab="publico">Analisar Arquivo Público</button>
                 </nav>
             </div>
         </div>
@@ -243,6 +260,81 @@
             </div>
         </div>
 
+        <!-- Conteúdo da Aba "PLA-WIN" -->
+        <div id="main-tab-pla-win" class="main-tab-content">
+             <!-- Seção de Parâmetros -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div class="p-4 border rounded-lg md:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Parâmetros do Medidor</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="constante_plawin" class="block text-sm font-medium text-gray-600">Constante:</label>
+                            <input type="number" id="constante_plawin" value="1.0" step="0.01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Tipo:</span>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_plawin" value="Grandeza" checked class="form-radio"> <span class="ml-2">Grandeza</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_plawin" value="Grandeza EAC" class="form-radio"> <span class="ml-2">Grandeza EAC</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="tipo_plawin" value="Pulso" class="form-radio"> <span class="ml-2">Pulso</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-gray-600">Adicionar Perdas? <span class="text-yellow-600">⚠️</span></span>
+                            <div class="flex gap-4 mt-2">
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_plawin" value="Não" checked class="form-radio"> <span class="ml-2">Não</span></label>
+                                <label class="inline-flex items-center"><input type="radio" name="perdas_plawin" value="Sim" class="form-radio"> <span class="ml-2">Sim</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Campos de Dados para PLA-WIN -->
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">Energia Fornecida (Canal 1: kWh)</h3>
+                    <textarea id="plawin_fornecida" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">Energia Recebida (Canal 1: -kWh)</h3>
+                    <textarea id="plawin_recebida" placeholder="Gere o relatório no Hemera, pressione Ctrl+A e depois Ctrl+C e cole os dados aqui." class="w-full h-40 p-2 border rounded-md"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Conteúdo da Aba "Analisar Arquivo Público" -->
+        <div id="main-tab-publico" class="main-tab-content">
+             <div class="p-4 border rounded-lg mb-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Parâmetros do Cálculo</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="constante_publico" class="block text-sm font-medium text-gray-600">Constante de Faturamento (k):</label>
+                        <input type="number" id="constante_publico" value="1.0" step="0.000001" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <span class="block text-sm font-medium text-gray-600">Adicionar Perdas? <span class="text-yellow-600">⚠️</span></span>
+                        <div class="flex gap-4 mt-2">
+                            <label class="inline-flex items-center"><input type="radio" name="perdas_publico" value="Não" checked class="form-radio"> <span class="ml-2">Não</span></label>
+                            <label class="inline-flex items-center"><input type="radio" name="perdas_publico" value="Sim" class="form-radio"> <span class="ml-2">Sim</span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
+                <label for="public-file-input" class="cursor-pointer">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="mt-2 block text-sm font-medium text-gray-900">
+                        Clique para carregar um arquivo público
+                    </span>
+                </label>
+                <input id="public-file-input" name="public-file-input" type="file" class="sr-only" accept=".txt,.log,.dat,.csv,.abnt,text/plain">
+                <p id="public-file-name" class="mt-1 text-xs text-gray-500"></p>
+            </div>
+        </div>
+
+
         <!-- Botões de Ação Comuns -->
         <div class="flex items-center gap-4 my-6 pt-6 border-t">
             <button id="calculate-btn" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">CALCULAR</button>
@@ -285,7 +377,10 @@
         const dataTabButtons = document.querySelectorAll('.tab-button');
         const dataTabContents = document.querySelectorAll('.tab-content');
 
-        // --- LÓGICA DE PROCESSAMENTO DE DADOS (Tradução do Python) ---
+        const publicFileInput = document.getElementById('public-file-input');
+        const publicFileName = document.getElementById('public-file-name');
+
+        // --- LÓGICA DE PROCESSAMENTO DE DADOS (HEMERA/PLA-WIN) ---
 
         // Helper para converter número no formato brasileiro para float
         const parseNumber = (str) => {
@@ -295,7 +390,7 @@
         
         // Helper para formatar número para o padrão brasileiro
         const formatBR = (value, precision) => {
-            if (value === null || isNaN(value)) return '';
+            if (value === null || value === undefined || isNaN(value)) return '';
             return value.toLocaleString('pt-BR', {
                 minimumFractionDigits: precision,
                 maximumFractionDigits: precision
@@ -303,10 +398,10 @@
         };
 
         function processarDados(textoBruto, tipo) { // tipo = 'consumo' ou 'demanda'
-            if (!textoBruto) return { resultados: null, df: null };
+            if (!textoBruto) return { resultados: null, df: null, error: null };
 
             const headerMatch = textoBruto.match(/^Data\s+Dia\s+Postos horários\s+(.*)$/m);
-            if (!headerMatch) return { resultados: null, df: null };
+            if (!headerMatch) return { resultados: null, df: null, error: null };
 
             const colunasDados = headerMatch[1].trim().split(/\t+/);
             const numColunasDados = colunasDados.length;
@@ -321,7 +416,7 @@
             const padraoDados = new RegExp(regexParts.join("\\s+") + "$", "gm");
 
             let dadosEncontrados = [...textoBruto.matchAll(padraoDados)];
-            if (!dadosEncontrados.length) return { resultados: null, df: null };
+            if (!dadosEncontrados.length) return { resultados: null, df: null, error: null };
 
             const df = dadosEncontrados.map(match => {
                 const row = {
@@ -360,6 +455,18 @@
                 return row;
             });
 
+            if (df.length > 1) {
+                for (let i = 1; i < df.length; i++) {
+                    if (!dateFns.isValid(df[i].DataHora) || !dateFns.isValid(df[i-1].DataHora)) {
+                          return { resultados: null, df: null, error: 'Formato de data inválido encontrado na Memória de Massa.' };
+                    }
+                    const diff = Math.abs(dateFns.differenceInMinutes(df[i].DataHora, df[i - 1].DataHora));
+                    if (diff !== 15) {
+                        return { resultados: null, df: null, error: `Intervalo inválido de ${diff} minutos encontrado na Memória de Massa. O intervalo deve ser de 15 minutos.` };
+                    }
+                }
+            }
+
             const resultados = {};
             for (const nomeColuna of colunasDados) {
                 const colTrimmed = nomeColuna.trim();
@@ -385,7 +492,7 @@
                     }
                 };
             }
-            return { resultados, df };
+            return { resultados, df, error: null };
         }
 
         function processarDadosFaturamento(textoBruto) {
@@ -443,6 +550,122 @@
 
             return { consumo: resultados_consumo, demanda: resultados_demanda };
         }
+        
+        function processarDadosPlaWin(textoFornecida, textoRecebida) {
+            const res_con = {};
+            const res_dem = {};
+
+            const processText = (text, isFornecida) => {
+                if (!text) return;
+                
+                let divisor = 1;
+                let unitFound = false;
+
+                const totaisRegex = /Totais do canal 1\s+pulsos\s+(-?\s?k?Wh)\s*([\s\S]*?)(?=Demandas máximas|Totais do canal 2|$)/i;
+                const totaisMatch = text.match(totaisRegex);
+                if (totaisMatch) {
+                    const unit = totaisMatch[1].trim();
+                    const isRecebida = unit.startsWith('-');
+                    divisor = unit.toLowerCase().includes('k') ? 1 : 1000;
+                    unitFound = true;
+                    const key = isRecebida ? 'kWh recebido' : 'kWh fornecido';
+
+                    if ((isFornecida && !isRecebida) || (!isFornecida && isRecebida)) {
+                        const pontaMatch = totaisMatch[2].match(/Ponta direta\s+\d+\s+([\d.,-]+)/);
+                        const foraPontaMatch = totaisMatch[2].match(/Fora Ponta direta\s+\d+\s+([\d.,-]+)/);
+                        const reservadoMatch = totaisMatch[2].match(/Reservado direto\s+\d+\s+([\d.,-]+)/);
+                        res_con[key] = {
+                            operacao: 'soma',
+                            valores: {
+                                'Ponta': pontaMatch ? parseNumber(pontaMatch[1]) / divisor : 0,
+                                'Fora Ponta': foraPontaMatch ? parseNumber(foraPontaMatch[1]) / divisor : 0,
+                                'Reservado': reservadoMatch ? parseNumber(reservadoMatch[1]) / divisor : 0,
+                            }
+                        };
+                    }
+                }
+
+                const demandasRegex = /Demandas máximas do canal 1\s+pulsos\s+(-?\s?k?W)\s*([\s\S]*?)(?=Totais do canal 2|$)/i;
+                const demandasMatch = text.match(demandasRegex);
+                if (demandasMatch) {
+                    const unit = demandasMatch[1].trim();
+                    if (!unitFound) {
+                          divisor = unit.toLowerCase().includes('k') ? 1 : 1000;
+                    }
+                    const isRecebida = unit.startsWith('-');
+                    const key = isRecebida ? 'kW recebido' : 'kW fornecido';
+
+                    const extractDemandValue = (blockText, postoName) => {
+                        const postoRegex = new RegExp(`${postoName}[\\s\\S]*?(?=Ponta|Fora ponta|Reservado|$)`, 'i');
+                        const postoBlockMatch = blockText.match(postoRegex);
+                        if (!postoBlockMatch) return 0;
+
+                        const lines = postoBlockMatch[0].trim().split('\n');
+                        if (lines.length < 2) return 0;
+
+                        const firstValueLine = lines[1].trim();
+                        if (firstValueLine.includes('00/000/0000')) return 0;
+                        
+                        const valueMatch = firstValueLine.match(/\s+([\d.,-]+)\s*$/);
+                        return valueMatch ? parseNumber(valueMatch[1]) : 0;
+                    };
+
+                    if ((isFornecida && !isRecebida) || (!isFornecida && isRecebida)) {
+                        res_dem[key] = {
+                            operacao: 'máximo',
+                            valores: {
+                                'Ponta': extractDemandValue(demandasMatch[2], 'Ponta') / divisor,
+                                'Fora Ponta': extractDemandValue(demandasMatch[2], 'Fora ponta') / divisor,
+                                'Reservado': 0
+                            }
+                        };
+                    }
+                }
+                
+                if(isFornecida) {
+                    const uferMatch = text.match(/Totais de energia reativa excedente[\s\S]*?Ponta:\s+\d+\s+([\d.,-]+)[\s\S]*?Fora ponta:\s+\d+\s+([\d.,-]+)[\s\S]*?Reservado:\s+\d+\s+([\d.,-]+)/);
+                    if (uferMatch) {
+                        res_dem['UFER'] = {
+                            operacao: 'soma',
+                            valores: {
+                                'Ponta': parseNumber(uferMatch[1]) / divisor,
+                                'Fora Ponta': parseNumber(uferMatch[2]) / divisor,
+                                'Reservado': parseNumber(uferMatch[3]) / divisor
+                            }
+                        };
+                    }
+
+                    const dmcrBlock = text.match(/Demandas ativas corrigidas[\s\S]*?(?=Totais do canal|$)/);
+                    if (dmcrBlock) {
+                          const extractDmcrValue = (blockText, postoName) => {
+                              const postoRegex = new RegExp(`${postoName}[\\s\\S]*?(?=Ponta|Fora ponta|Reservado|$)`, 'i');
+                              const postoBlockMatch = blockText.match(postoRegex);
+                              if (!postoBlockMatch) return 0;
+                              const lines = postoBlockMatch[0].trim().split('\n');
+                              if (lines.length < 2) return 0;
+                              const firstValueLine = lines[1].trim();
+                              if (firstValueLine.includes('00/000/0000')) return 0;
+                              const valueMatch = firstValueLine.match(/\s+([\d.,-]+)\s*$/);
+                              return valueMatch ? parseNumber(valueMatch[1]) : 0;
+                          };
+                          res_dem['DMCR'] = {
+                              operacao: 'máximo',
+                              valores: {
+                                  'Ponta': extractDmcrValue(dmcrBlock[0], 'Ponta') / divisor,
+                                  'Fora Ponta': extractDmcrValue(dmcrBlock[0], 'Fora ponta') / divisor,
+                                  'Reservado': 0
+                              }
+                          };
+                    }
+                }
+            };
+            
+            processText(textoFornecida, true);
+            processText(textoRecebida, false);
+
+            return { res_con, res_dem };
+        }
+
 
         function extrairInfoCliente(textoBruto) {
             const info = { contrato: "Não encontrado", serial: "Não encontrado" };
@@ -474,6 +697,207 @@
             }
             return { dataInicial: null, dataFinal: null };
         }
+
+        // --- LÓGICA DE PROCESSAMENTO DE DADOS (ARQUIVO PÚBLICO ABNT) ---
+
+        const obterDados = (data, posicao, tamanho) => {
+            const i = posicao - 1;
+            return (data.length >= i + tamanho) ? data.slice(i, i + tamanho) : "";
+        };
+
+        // Função de parse de data mais robusta para evitar erros
+        const parseDDMMYY_HHMMSS = (s) => {
+            if (typeof s !== 'string' || !s.match(/^\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}$/)) {
+                return new Date(NaN); // Retorna data inválida
+            }
+            const [d, t] = s.split(' ');
+            const [dd, mm, yy] = d.split('/').map(Number);
+            const [HH, MM, SS] = t.split(':').map(Number);
+
+            if ([dd, mm, yy, HH, MM, SS].some(isNaN)) {
+                return new Date(NaN);
+            }
+            
+            const year = yy + 2000;
+            const date = new Date(year, mm - 1, dd, HH, MM, SS);
+
+            // Validação final para datas impossíveis (ex: 30/02/24)
+            if (date.getFullYear() !== year || date.getMonth() !== mm - 1 || date.getDate() !== dd) {
+                return new Date(NaN);
+            }
+            return date;
+        };
+
+        const addMinutes = (date, mins) => dateFns.addMinutes(date, mins);
+
+        function calcularFatorPotenciaPlaWin(row) {
+            const w = row.Wh ?? 0;
+            const var_ind = row.varind ?? 0;
+            const var_cap = row.varcap ?? 0;
+            const q_net = var_ind - var_cap;
+
+            if (w === 0) {
+                return { value: 1.0, type: q_net < 0 ? 'capacitivo' : 'indutivo' };
+            }
+            
+            const s = Math.sqrt(w * w + q_net * q_net);
+            const fp = s !== 0 ? (w / s) : 1.0;
+            
+            if (q_net > 0) { // Indutivo
+                return { value: fp, type: 'indutivo' };
+            } else { // Capacitivo ou Unitário (considerado capacitivo para o gráfico)
+                return { value: fp, type: 'capacitivo' };
+            }
+        }
+
+        function processarParametrosGerais(file_content) {
+            const dados = file_content.replace(/\r?\n/g, '');
+            const params = {};
+            params.medidor = obterDados(dados, 1, 8);
+            params.data_hora_leitura = `${obterDados(dados,21,2)}/${obterDados(dados,23,2)}/${obterDados(dados,25,2)} ${obterDados(dados,15,2)}:${obterDados(dados,17,2)}:${obterDados(dados,19,2)}`;
+            params.data_hora_mm = `${obterDados(dados,21,2)}/${obterDados(dados,23,2)}/${obterDados(dados,25,2)} ${obterDados(dados,29,2)}:${obterDados(dados,31,2)}:${obterDados(dados,33,2)}`;
+            params.intervalo_mm = obterDados(dados, 2317, 2);
+            params.intervalo_demanda = obterDados(dados, 167, 2);
+            params.constante_canal_1 = `${obterDados(dados,261,6)}/${obterDados(dados,267,6)}`;
+            params.constante_canal_2 = `${obterDados(dados,273,6)}/${obterDados(dados,279,6)}`;
+            params.constante_canal_3 = `${obterDados(dados,285,6)}/${obterDados(dados,291,6)}`;
+            params.estado_bateria = obterDados(dados, 297, 2) === '00' ? 'Bom' : 'Ruim';
+            params.carga_md = obterDados(dados, 1741, 4);
+            params.versao_hardware = obterDados(dados, 1751, 4);
+            params.reservado_ativo = obterDados(dados, 303, 2) !== '00' ? 'Sim' : 'Não';
+            params.horario_reservado = `${obterDados(dados,141,2)}:${obterDados(dados,143,2)}`;
+            params.reservado_sabado = obterDados(dados, 2323, 2);
+            params.reservado_domingo = obterDados(dados, 2325, 2);
+            params.reservado_feriado = obterDados(dados, 2327, 2);
+            const hv_val = `${obterDados(dados, 2233, 2)}/${obterDados(dados, 2235, 2)}`;
+            params.horario_verao = (hv_val === '00/00') ? 'Desativado' : hv_val;
+            params.horario_FP = `${obterDados(dados,121,2)}:${obterDados(dados,123,2)}`;
+            params.horario_P = `${obterDados(dados,113,2)}:${obterDados(dados,115,2)}`;
+            params.horario_indutivo = `${obterDados(dados,2341,2)}:${obterDados(dados,2343,2)}`;
+            params.horario_capacitivo = `${obterDados(dados,2349,2)}:${obterDados(dados,2351,2)}`;
+            params.data_reposicao_demanda = `${obterDados(dados,47,2)}/${obterDados(dados,49,2)}/${obterDados(dados,51,2)}`;
+            params.hora_reposicao_demanda = `${obterDados(dados,41,2)}:${obterDados(dados,43,2)}:${obterDados(dados,55,2)}`;
+            params.grandeza_1o_canal = obterDados(dados, 2309, 2);
+            params.grandeza_2o_canal = obterDados(dados, 2311, 2);
+            params.grandeza_3o_canal = obterDados(dados, 2313, 2);
+            params.feriados = [];
+            for (let p = 171; p < 171 + 15 * 6; p += 6) {
+                const feriado = `${obterDados(dados,p,2)}/${obterDados(dados,p+2,2)}/${obterDados(dados,p+4,2)}`;
+                if (feriado !== '00/00/00') params.feriados.push(feriado);
+            }
+            const grandezas = {
+                '01': 'Wh', '10': 'varind', '11': 'varcap', '14': '-Wh', '15': '-varind', '16': '-varcap',
+                '17': 'v_a', '18': 'v_b', '19': 'v_c', '20': 'i_a', '21': 'i_b', '22': 'i_c'
+            };
+            return { params, grandezas };
+        }
+
+        function processarMemoriaMassa(file_content, params, grandezas) {
+            const linhas = file_content.split(/\r?\n/).filter(l => l.startsWith('SALV') || l.startsWith('CONT'));
+            if (!linhas.length) return [];
+            const c1 = [], c2 = [], c3 = [];
+            for (const linha of linhas) {
+                for (let i = 0; i < 24; i++) {
+                    const base = 13 + i * 12;
+                    c1.push(parseInt(obterDados(linha, base, 4) || '0', 10));
+                    c2.push(parseInt(obterDados(linha, base + 4, 4) || '0', 10));
+                    c3.push(parseInt(obterDados(linha, base + 8, 4) || '0', 10));
+                }
+            }
+            let timestamps = [];
+            
+            const last = parseDDMMYY_HHMMSS(params['data_hora_mm']);
+            if (!dateFns.isValid(last)) {
+                throw new Error(`Data/hora da memória de massa inválida no arquivo: "${params['data_hora_mm']}"`);
+            }
+            const intervalo = parseInt(params['intervalo_mm'] || '5', 10);
+            const start = addMinutes(last, -intervalo * (c1.length - 1));
+            for (let i = 0; i < c1.length; i++) timestamps.push(addMinutes(start, i * intervalo));
+
+            const feriadosDates = new Set(params.feriados.map(f => {
+                const [dd, mm, yy] = f.split('/');
+                return `${dd}/${mm}/20${yy}`;
+            }));
+
+            const toMins = (hhmm) => {
+                const [h, m] = hhmm.split(':').map(Number);
+                return h * 60 + m;
+            };
+            const pMins = toMins(params.horario_P);
+            const fpMins = toMins(params.horario_FP);
+            const resMins = params.reservado_ativo === 'Sim' ? toMins(params.horario_reservado) : -1;
+            
+            const getPostoHorario = (d) => {
+                const dow = d.getDay();
+                const dStr = dateFns.format(d, 'dd/MM/yyyy');
+                if (dow === 0 || dow === 6 || feriadosDates.has(dStr)) return 'Fora Ponta';
+                const currentMins = d.getHours() * 60 + d.getMinutes();
+                if (resMins !== -1 && currentMins > resMins && currentMins <= fpMins) return 'Reservado';
+                if (currentMins > pMins && currentMins <= fpMins) return 'Ponta';
+                return 'Fora Ponta';
+            };
+
+            const g1 = grandezas[params.grandeza_1o_canal];
+            const g2 = grandezas[params.grandeza_2o_canal];
+            const g3 = grandezas[params.grandeza_3o_canal];
+
+            return timestamps.map((ts, i) => {
+                const row = {
+                    Timestamp: ts,
+                    C1: c1[i], C2: c2[i], C3: c3[i]
+                };
+                if (g1) row[g1] = c1[i];
+                if (g2) row[g2] = c2[i];
+                if (g3) row[g3] = c3[i];
+
+                row.Wh = row.Wh ?? (row['-Wh'] ? -row['-Wh'] : 0);
+                row.varind = row.varind ?? (row['-varind'] ? -row['-varind'] : 0);
+                row.varcap = row.varcap ?? (row['-varcap'] ? -row['-varcap'] : 0);
+
+                row['Fator de Potência'] = calcularFatorPotenciaPlaWin(row);
+                row['Posto Horário'] = getPostoHorario(ts);
+                return row;
+            });
+        }
+
+        function processarAlteracoesEFaltas(file_content) {
+            const dados = file_content.replace(/\r?\n/g, '');
+            const faltas = [];
+            for (let i = 0; i < 15; i++) {
+                const pos = 329 + i * 24;
+                const falta = obterDados(dados, pos, 24);
+                if (falta && falta !== '000000000000000000000000') {
+                    const inicio = parseDDMMYY_HHMMSS(`${falta.slice(6,8)}/${falta.slice(8,10)}/${falta.slice(10,12)} ${falta.slice(0,2)}:${falta.slice(2,4)}:${falta.slice(4,6)}`);
+                    const fim = parseDDMMYY_HHMMSS(`${falta.slice(18,20)}/${falta.slice(20,22)}/${falta.slice(22,24)} ${falta.slice(12,14)}:${falta.slice(14,16)}:${falta.slice(16,18)}`);
+                    if (dateFns.isValid(inicio) && dateFns.isValid(fim)) {
+                        faltas.push({ inicio, fim });
+                    }
+                }
+            }
+            const codigos = { 11: 'Envio de senha', 12: 'Programação de código de cliente', 13: 'Pedido de string', 20: 'Leitura com reposição de demanda', 21: 'Leitura s/ reposição atuais', 22: 'Leitura s/ reposição anteriores', 23: 'Leitura de regs. após última reposição', 99: 'Comando para carga rápida de programa' };
+            const alteracoes = [];
+            for (let i = 0; i < 15; i++) {
+                const pos = 1927 + i * 20;
+                const s = obterDados(dados, pos, 20);
+                if (s && s !== '00000000000000000000') {
+                    const timestamp = parseDDMMYY_HHMMSS(`${s.slice(14,16)}/${s.slice(16,18)}/${s.slice(18,20)} ${s.slice(8,10)}:${s.slice(10,12)}:${s.slice(12,14)}`);
+                    if (dateFns.isValid(timestamp)) {
+                        const codigo = parseInt(s.slice(0, 2), 10);
+                        alteracoes.push({
+                            Leitora: s.slice(2, 8),
+                            Descrição: codigos[codigo] || `Código ${codigo}`,
+                            Timestamp: timestamp
+                        });
+                    }
+                }
+            }
+            const uniq = (arr, keyFn) => Array.from(new Map(arr.map(item => [keyFn(item), item])).values());
+            return {
+                faltas: uniq(faltas, f => f.inicio.getTime()).sort((a,b) => a.inicio - b.inicio),
+                alteracoes: uniq(alteracoes, a => a.Timestamp.getTime()).sort((a,b) => a.Timestamp - b.Timestamp)
+            };
+        }
+
 
         // --- LÓGICA DE VALIDAÇÃO ---
         function validateInputs() {
@@ -550,15 +974,23 @@
                     }
                 }
 
-            } else { // Aba 1 Medidor
+            } else if (activeMainTab !== 'publico') { // Aba 1 Medidor ou PLA-WIN
                 const allInfos = [];
-                const consumoTxt = document.getElementById('consumo_unico').value;
-                const demandaTxt = document.getElementById('demanda_unico').value;
-                const faturamentoTxt = document.getElementById('faturamento_unico').value;
+                let consumoTxt, demandaTxt, faturamentoTxt;
 
-                if(consumoTxt) allInfos.push(extrairInfoCliente(consumoTxt));
-                if(demandaTxt) allInfos.push(extrairInfoCliente(demandaTxt));
-                if(faturamentoTxt) allInfos.push(extrairInfoCliente(faturamentoTxt));
+                if (activeMainTab === '1-medidor') {
+                    consumoTxt = document.getElementById('consumo_unico').value;
+                    demandaTxt = document.getElementById('demanda_unico').value;
+                    faturamentoTxt = document.getElementById('faturamento_unico').value;
+                    if(consumoTxt) allInfos.push(extrairInfoCliente(consumoTxt));
+                    if(demandaTxt) allInfos.push(extrairInfoCliente(demandaTxt));
+                    if(faturamentoTxt) allInfos.push(extrairInfoCliente(faturamentoTxt));
+                } else if (activeMainTab === 'pla-win') { // PLA-WIN
+                    const fornecidaTxt = document.getElementById('plawin_fornecida').value;
+                    const recebidaTxt = document.getElementById('plawin_recebida').value;
+                    if(fornecidaTxt) allInfos.push(extrairInfoCliente(fornecidaTxt));
+                    if(recebidaTxt) allInfos.push(extrairInfoCliente(recebidaTxt));
+                }
                 
                 const contratos = allInfos.map(info => info.contrato).filter(c => c !== "Não encontrado");
                 if (contratos.length > 1 && new Set(contratos).size > 1) {
@@ -585,8 +1017,12 @@
             const activeMainTab = document.querySelector('.main-tab-button.active').dataset.mainTab;
             if (activeMainTab === '2-medidores') {
                 handleCalculateTwoMeters();
-            } else {
+            } else if (activeMainTab === '1-medidor') {
                 handleCalculateOneMeter();
+            } else if (activeMainTab === 'pla-win') {
+                handleCalculatePlaWin();
+            } else if (activeMainTab === 'publico') {
+                handleCalculatePublicFile();
             }
         }
 
@@ -602,10 +1038,25 @@
             let res_con_novo, df_con_novo, res_dem_novo, df_dem_novo;
 
             if (consumoAntigoTxt || demandaAntigoTxt || consumoNovoTxt || demandaNovoTxt) {
-                ({ resultados: res_con_antigo, df: df_con_antigo } = processarDados(consumoAntigoTxt, 'consumo'));
-                ({ resultados: res_dem_antigo, df: df_dem_antigo } = processarDados(demandaAntigoTxt, 'demanda'));
-                ({ resultados: res_con_novo, df: df_con_novo } = processarDados(consumoNovoTxt, 'consumo'));
-                ({ resultados: res_dem_novo, df: df_dem_novo } = processarDados(demandaNovoTxt, 'demanda'));
+                const consumoAntigoResult = processarDados(consumoAntigoTxt, 'consumo');
+                if (consumoAntigoResult.error) { showMessage('error', `Erro no Consumo (Antigo): ${consumoAntigoResult.error}`); return; }
+                res_con_antigo = consumoAntigoResult.resultados;
+                df_con_antigo = consumoAntigoResult.df;
+
+                const demandaAntigoResult = processarDados(demandaAntigoTxt, 'demanda');
+                if (demandaAntigoResult.error) { showMessage('error', `Erro na Demanda (Antigo): ${demandaAntigoResult.error}`); return; }
+                res_dem_antigo = demandaAntigoResult.resultados;
+                df_dem_antigo = demandaAntigoResult.df;
+
+                const consumoNovoResult = processarDados(consumoNovoTxt, 'consumo');
+                if (consumoNovoResult.error) { showMessage('error', `Erro no Consumo (Novo): ${consumoNovoResult.error}`); return; }
+                res_con_novo = consumoNovoResult.resultados;
+                df_con_novo = consumoNovoResult.df;
+
+                const demandaNovoResult = processarDados(demandaNovoTxt, 'demanda');
+                if (demandaNovoResult.error) { showMessage('error', `Erro na Demanda (Novo): ${demandaNovoResult.error}`); return; }
+                res_dem_novo = demandaNovoResult.resultados;
+                df_dem_novo = demandaNovoResult.df;
             } else if (faturamentoAntigoTxt || faturamentoNovoTxt) {
                 const fatAntigo = processarDadosFaturamento(faturamentoAntigoTxt);
                 res_con_antigo = fatAntigo.consumo;
@@ -690,8 +1141,15 @@
             let res_con, df_con, res_dem, df_dem;
 
             if (consumoTxt || demandaTxt) {
-                ({ resultados: res_con, df: df_con } = processarDados(consumoTxt, 'consumo'));
-                ({ resultados: res_dem, df: df_dem } = processarDados(demandaTxt, 'demanda'));
+                const consumoResult = processarDados(consumoTxt, 'consumo');
+                if (consumoResult.error) { showMessage('error', `Erro nos dados de Consumo: ${consumoResult.error}`); return; }
+                res_con = consumoResult.resultados;
+                df_con = consumoResult.df;
+
+                const demandaResult = processarDados(demandaTxt, 'demanda');
+                if (demandaResult.error) { showMessage('error', `Erro nos dados de Demanda: ${demandaResult.error}`); return; }
+                res_dem = demandaResult.resultados;
+                df_dem = demandaResult.df;
             } else if (faturamentoTxt) {
                 const fat = processarDadosFaturamento(faturamentoTxt);
                 res_con = fat.consumo;
@@ -750,10 +1208,174 @@
             }
         }
 
+        function handleCalculatePlaWin() {
+            const fornecidaTxt = document.getElementById('plawin_fornecida').value;
+            const recebidaTxt = document.getElementById('plawin_recebida').value;
+
+            if (!fornecidaTxt && !recebidaTxt) {
+                showMessage('warning', 'Por favor, cole o conteúdo em um dos campos de texto antes de calcular.');
+                return;
+            }
+
+            const { res_con, res_dem } = processarDadosPlaWin(fornecidaTxt, recebidaTxt);
+            
+            const tableData = [];
+            const postos = ['Ponta', 'Reservado', 'Fora Ponta'];
+            const grandezas_a_processar = [
+                { key: 'kWh fornecido', type: 'consumo', label: 'kWh fornecido acumulado' },
+                { key: 'kW fornecido', type: 'demanda', label: 'kW fornecido máximo' },
+                { key: 'UFER', type: 'demanda', label: 'UFER (ERE) acumulado' },
+                { key: 'DMCR', type: 'demanda', label: 'DMCR (DRE) máximo' },
+                { key: 'kWh recebido', type: 'consumo', label: 'kWh recebido acumulado' },
+                { key: 'kW recebido', type: 'demanda', label: 'kW recebido máximo' }
+            ];
+
+            const getParams = (grandeza) => {
+                const constante = parseFloat(document.getElementById('constante_plawin').value);
+                const tipo_opcao = document.querySelector('input[name="tipo_plawin"]:checked').value;
+                const perdas_opcao = document.querySelector('input[name="perdas_plawin"]:checked').value;
+                const perdas_multiplier = perdas_opcao === "Sim" ? 1.025 : 1.0;
+                const perdas_display = perdas_opcao === "Sim" ? 2.5 : 0.0;
+                let k_value = constante;
+                if (grandeza.startsWith("kW ")) {
+                    if (tipo_opcao === "Grandeza EAC") k_value = constante / 4;
+                    else if (tipo_opcao === "Pulso") k_value = constante * 4;
+                }
+                return { k_value, perdas_display, perdas_multiplier };
+            };
+
+            for (const item of grandezas_a_processar) {
+                const { key: grandeza, type: tipo_dado, label } = item;
+                const res = tipo_dado === 'consumo' ? res_con : res_dem;
+                if (res && res[grandeza]) {
+                    tableData.push({ isSeparator: true, label });
+                    for (const posto of postos) {
+                        const val = res[grandeza].valores[posto] || 0.0;
+                        const { k_value: k, perdas_display, perdas_multiplier } = getParams(grandeza);
+                        const final = val * k * perdas_multiplier;
+                        tableData.push({ posto, val, k, perdas_display, final });
+                    }
+                }
+            }
+
+            if (tableData.length > 0) {
+                 const info = extrairInfoCliente(fornecidaTxt || recebidaTxt);
+                 // Para PLA-WIN, não temos dataframes para gráficos, então passamos objetos vazios.
+                 renderSingleMeterResults(tableData, info.contrato, info.serial, {}, {});
+                 resultsModal.classList.remove('hidden');
+            } else {
+                showMessage('error', 'Não foi possível encontrar dados válidos. Verifique o conteúdo colado.');
+            }
+        }
+
+        function handleCalculatePublicFile() {
+            const file = publicFileInput.files[0];
+            if (!file) {
+                showMessage('warning', 'Por favor, selecione um arquivo para analisar.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                try {
+                    const { params, grandezas } = processarParametrosGerais(content);
+                    const df_mm = processarMemoriaMassa(content, params, grandezas);
+                    const { faltas, alteracoes } = processarAlteracoesEFaltas(content);
+                    renderPublicFileResults(params, grandezas, df_mm, faltas, alteracoes);
+                    resultsModal.classList.remove('hidden');
+                } catch (error) {
+                    showMessage('error', `Erro ao processar o arquivo: ${error.message}. Verifique se o formato é ABNT válido.`);
+                    console.error(error);
+                }
+            };
+            reader.onerror = function() {
+                showMessage('error', 'Não foi possível ler o arquivo selecionado.');
+            };
+            reader.readAsText(file, 'latin-1'); // Usa latin-1 para compatibilidade com arquivos ABNT
+        }
+
         // --- FUNÇÕES DE RENDERIZAÇÃO E UI ---
 
         let activeCharts = []; // Para destruir gráficos antigos
         
+        // Opções de gráfico compartilhadas
+        const defaultChartOptions = {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'timeseries',
+                    grid: { display: false },
+                    time: { 
+                        unit: 'day',
+                        tooltipFormat: 'dd/MM/yyyy HH:mm',
+                        displayFormats: { day: 'dd/MM' }
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(new Date(value));
+                        }
+                    }
+                },
+                y: {
+                   grid: { display: false }
+                }
+            }
+        };
+
+        const fpChartOptions = {
+            ...defaultChartOptions,
+            scales: {
+                ...defaultChartOptions.scales,
+                y: {
+                    min: 0, max: 2,
+                    grid: { display: false },
+                    ticks: {
+                        stepSize: 0.2,
+                        callback: function(value) {
+                            const val = parseFloat(value.toFixed(1));
+                            if (val === 1) return '1,0 Unit.';
+                            if (val < 1) return `${formatBR(val, 1)} Ind`;
+                            if (val > 1) return `${formatBR(2 - val, 1)} Cap`;
+                            return '';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            const yValue = context.parsed.y;
+                            if (yValue <= 1) {
+                                label += `${formatBR(yValue, 4)} Indutivo`;
+                            } else {
+                                label += `${formatBR(2 - yValue, 4)} Capacitivo`;
+                            }
+                            return label;
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        indutivoLine: {
+                            type: 'line', yMin: 0.92, yMax: 0.92,
+                            borderColor: 'rgb(255, 99, 132)', borderWidth: 2, borderDash: [6, 6],
+                            label: { content: '0,92 Indutivo', enabled: true, position: 'start', backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+                        },
+                        capacitivoLine: {
+                            type: 'line', yMin: 1.08, yMax: 1.08, // 1 + (1 - 0.92)
+                            borderColor: 'rgb(54, 162, 235)', borderWidth: 2, borderDash: [6, 6],
+                            label: { content: '0,92 Capacitivo', enabled: true, position: 'start', backgroundColor: 'rgba(54, 162, 235, 0.7)' }
+                        }
+                    }
+                }
+            }
+        };
+
+
         function renderTwoMetersResults(tableData, contrato, serialAntigo, serialNovo, dataframes, periodoAntigo, periodoNovo) {
             activeCharts.forEach(chart => chart.destroy());
             activeCharts = [];
@@ -838,7 +1460,7 @@
             activeCharts = [];
 
             const formatadorData = (data) => data ? new Intl.DateTimeFormat('pt-BR').format(data) : 'N/A';
-            const periodoHtml = periodo.dataInicial ? `<p class="text-center text-gray-600 mb-4">Período: ${formatadorData(periodo.dataInicial)} a ${formatadorData(periodo.dataFinal)}</p>` : '';
+            const periodoHtml = periodo && periodo.dataInicial ? `<p class="text-center text-gray-600 mb-4">Período: ${formatadorData(periodo.dataInicial)} a ${formatadorData(periodo.dataFinal)}</p>` : '';
 
             const tableHTML = `
                 <div id="captureTable" class="p-4 bg-white">
@@ -885,6 +1507,93 @@
             ];
             renderCharts(chartDefinitions, dataframes);
         }
+
+        function renderPublicFileResults(params, grandezas, df_mm, faltas, alteracoes) {
+            activeCharts.forEach(chart => chart.destroy());
+            activeCharts = [];
+
+            const k_faturamento = parseFloat(document.getElementById('constante_publico').value) || 1.0;
+            const perdas_opcao = document.querySelector('input[name="perdas_publico"]:checked').value;
+            const perdas_multiplier = perdas_opcao === "Sim" ? 1.025 : 1.0;
+            const perdas_display = perdas_opcao === "Sim" ? 2.5 : 0.0;
+            
+            const const_parts = (params.constante_canal_1 || '1/1').split('/');
+            const numerador = parseFloat(const_parts[0]) || 1;
+            const denominador = parseFloat(const_parts[1]) || 1;
+            const k_medidor = denominador !== 0 ? numerador / denominador : numerador;
+
+            const df_mm_processed = df_mm.map(row => {
+                const c1 = row.C1 || 0;
+                const c2 = row.C2 || 0;
+                const c3 = row.C3 || 0;
+                return {
+                    ...row,
+                    'kWh fornecido': c1 * k_medidor,
+                    'kVArh indutivo': c2 * k_medidor,
+                    'kVArh capacitivo': c3 * k_medidor,
+                    'kW fornecido': c1 * k_medidor * 4,
+                    fatorPotencia: row['Fator de Potência']
+                };
+            });
+
+            const summaryData = [];
+            const postos = ['Ponta', 'Fora Ponta', 'Reservado'];
+            const grandezas_summary = [
+                { key: 'C1', label: 'kWh fornecido acumulado', op: 'sum', multiplier: k_medidor },
+                { key: 'C1', label: 'kW fornecido máximo', op: 'max', multiplier: k_medidor * 4 }
+            ];
+
+            grandezas_summary.forEach(grandeza => {
+                summaryData.push({ isSeparator: true, label: grandeza.label });
+                const calcByPosto = df_mm.reduce((acc, row) => {
+                    const posto = row['Posto Horário'];
+                    const value = (row[grandeza.key] || 0) * grandeza.multiplier;
+                    if (!acc[posto]) {
+                        acc[posto] = (grandeza.op === 'max') ? -Infinity : 0;
+                    }
+                    acc[posto] = (grandeza.op === 'max') ? Math.max(acc[posto], value) : acc[posto] + value;
+                    return acc;
+                }, {});
+                postos.forEach(posto => {
+                    if (posto === 'Reservado' && !df_mm.some(r => r['Posto Horário'] === 'Reservado')) return;
+                    const val = calcByPosto[posto] === -Infinity ? 0 : (calcByPosto[posto] || 0);
+                    const final = val * k_faturamento * perdas_multiplier;
+                    summaryData.push({ posto, val, k: k_faturamento, perdas_display, final });
+                });
+            });
+
+            const card = (title, value, { good, bad } = {}) => {
+                let valClass = 'text-gray-800';
+                if (good) valClass = 'text-green-600';
+                if (bad) valClass = 'text-red-600';
+                return `<div class="p-3 bg-slate-50 border rounded-lg shadow-sm"><p class="text-xs text-gray-500 font-medium">${title}</p><p class="text-lg font-bold ${valClass}">${value || 'N/A'}</p></div>`;
+            };
+            const g1 = grandezas[params.grandeza_1o_canal], g2 = grandezas[params.grandeza_2o_canal], g3 = grandezas[params.grandeza_3o_canal];
+            const c1 = params.constante_canal_1, c2 = params.constante_canal_2, c3 = params.constante_canal_3;
+            const constIguais = (c1===c2 && c1===c3);
+
+            const parametrosHTML = `<div class="space-y-6"><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Identificação e Status</h4><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">${card('Medidor', params.medidor)}${card('Data/Hora Leitura', params.data_hora_leitura)}${card('Intervalo MM (min)', params.intervalo_mm, { bad: params.intervalo_mm !== '05' })}${card('Intervalo Demanda (min)', params.intervalo_demanda, { bad: params.intervalo_demanda !== '15' })}${card('Bateria', params.estado_bateria, { good: params.estado_bateria === 'Bom', bad: params.estado_bateria !== 'Bom' })}${card('Carga do MD', params.carga_md)}${card('Versão HW', params.versao_hardware)}</div></div><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Constantes e Grandezas</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4"><div class="space-y-2"><h5 class="text-sm font-medium text-gray-600">Constantes</h5><div class="grid grid-cols-3 gap-2">${card('Canal 1', c1, { good: constIguais })}${card('Canal 2', c2, { good: constIguais })}${card('Canal 3', c3, { good: constIguais })}</div></div><div class="space-y-2"><h5 class="text-sm font-medium text-gray-600">Grandezas</h5><div class="grid grid-cols-3 gap-2">${card('Canal 1', g1)}${card('Canal 2', g2)}${card('Canal 3', g3)}</div></div></div></div><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Horários</h4><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">${card('Ponta', params.horario_P)}${card('Fora Ponta', params.horario_FP)}${card('Reservado', params.reservado_ativo === 'Sim' ? params.horario_reservado : 'Inativo')}${card('Capacitivo', params.horario_capacitivo)}${card('Indutivo', params.horario_indutivo)}${card('Reposição Demanda', params.data_reposicao_demanda)}${card('Horário Verão', params.horario_verao)}</div></div><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Feriados Cadastrados</h4>${params.feriados.length > 0 ? `<div class="flex flex-wrap gap-2">${params.feriados.map(f => `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${f}</span>`).join('')}</div>` : '<p class="text-sm text-gray-500">Nenhum feriado cadastrado.</p>'}</div></div>`;
+            const eventosHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Faltas de Energia (${faltas.length})</h4>${faltas.length > 0 ? `<div class="max-h-96 overflow-y-auto"><table class="results-table"><thead><tr><th>Início</th><th>Fim</th><th>Duração</th></tr></thead><tbody>${faltas.map(f => {const dur = dateFns.differenceInMinutes(f.fim, f.inicio); const d = Math.floor(dur / 1440); const h = Math.floor((dur % 1440) / 60); const m = dur % 60; return `<tr><td>${dateFns.isValid(f.inicio) ? dateFns.format(f.inicio, 'dd/MM/yy HH:mm:ss') : 'Inválido'}</td><td>${dateFns.isValid(f.fim) ? dateFns.format(f.fim, 'dd/MM/yy HH:mm:ss') : 'Inválido'}</td><td>${d}d ${h}h ${m}m</td></tr>`}).join('')}</tbody></table></div>` : '<p class="text-sm text-gray-500">Nenhuma falta de energia registrada.</p>'}</div><div><h4 class="font-semibold text-lg mb-2 border-b pb-1">Alterações de Parâmetros (${alteracoes.length})</h4>${alteracoes.length > 0 ? `<div class="max-h-96 overflow-y-auto"><table class="results-table"><thead><tr><th>Data/Hora</th><th>Descrição</th><th>Leitora</th></tr></thead><tbody>${alteracoes.map(a => `<tr><td>${dateFns.isValid(a.Timestamp) ? dateFns.format(a.Timestamp, 'dd/MM/yy HH:mm:ss') : 'Inválido'}</td><td class="text-left">${a.Descrição}</td><td>${a.Leitora}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-sm text-gray-500">Nenhuma alteração registrada.</p>'}</div></div>`;
+            const memoriaMassaHTML = df_mm_processed.length > 0 ? `<div id="captureSummaryTable-abnt" class="p-4 bg-white"><h4 class="font-semibold text-lg mb-2 border-b pb-1">Sumarização</h4><table class="results-table"><thead><tr><th>Posto Horário</th><th>Valor</th><th>K Faturamento</th><th>Perdas (%)</th><th>Valor Final</th></tr></thead><tbody>${summaryData.map(row => {if (row.isSeparator) {return `<tr class="separator-row"><td colspan="5">${row.label}</td></tr>`;}return `<tr><td>${row.posto}</td><td>${formatBR(row.val, 4)}</td><td>${formatBR(row.k, 6)}</td><td>${formatBR(row.perdas_display, 1)}</td><td>${formatBR(row.final, 4)}</td></tr>`;}).join('')}</tbody></table><div class="text-right my-2"><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('captureSummaryTable-abnt', this)">Copiar Tabela</button></div></div><div id="charts-container-abnt" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6"></div><div id="captureDetailTable-abnt" class="p-4 bg-white mt-6"><h4 class="font-semibold text-lg mb-2 border-b pb-1">Dados Detalhados</h4><div class="max-h-[50vh] overflow-auto"><table class="results-table"><thead><tr><th>Data/Hora</th><th>Posto</th><th>C1</th><th>C2</th><th>C3</th><th>kWh forn.</th><th>kVArh ind.</th><th>kVArh cap.</th><th>kW forn.</th><th>FP</th></tr></thead><tbody>${df_mm_processed.map(r => {const fp = r.fatorPotencia; const fpString = `${formatBR(fp.value, 2)} ${fp.type === 'indutivo' ? 'L' : 'C'}`; return `<tr><td>${dateFns.format(r.Timestamp, 'dd/MM/yy HH:mm')}</td><td>${r['Posto Horário']}</td><td>${r.C1}</td><td>${r.C2}</td><td>${r.C3}</td><td>${formatBR(r['kWh fornecido'], 4)}</td><td>${formatBR(r['kVArh indutivo'], 4)}</td><td>${formatBR(r['kVArh capacitivo'], 4)}</td><td>${formatBR(r['kW fornecido'], 4)}</td><td>${fpString}</td></tr>`}).join('')}</tbody></table></div><div class="text-right my-2"><button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700" onclick="exportTableToCSV(this)">Exportar para CSV</button><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ml-2" onclick="copyElementAsImage('captureDetailTable-abnt', this)">Copiar Tabela</button></div></div>` : '<p class="text-sm text-gray-500">Não foi possível processar a Memória de Massa.</p>';
+
+            modalContent.innerHTML = `<h3 class="text-center text-xl font-bold mb-4">Análise de Arquivo Público (ABNT)</h3><div class="border-b border-gray-200 mb-4"><nav class="-mb-px flex space-x-4" aria-label="Modal Tabs"><button class="modal-tab-button active whitespace-nowrap py-2 px-3 border-b-2 font-semibold text-sm rounded-t-lg" data-modal-tab="parametros">Parâmetros</button><button class="modal-tab-button whitespace-nowrap py-2 px-3 border-b-2 font-semibold text-sm rounded-t-lg" data-modal-tab="eventos">Eventos</button><button class="modal-tab-button whitespace-nowrap py-2 px-3 border-b-2 font-semibold text-sm rounded-t-lg" data-modal-tab="mm">Memória de Massa</button></nav></div><div id="modal-tab-parametros" class="modal-tab-content active p-2">${parametrosHTML}</div><div id="modal-tab-eventos" class="modal-tab-content p-2">${eventosHTML}</div><div id="modal-tab-mm" class="modal-tab-content p-2">${memoriaMassaHTML}</div>`;
+            
+            // Armazena os dados processados para a exportação CSV
+            window.publicFileData = df_mm_processed;
+
+            document.querySelectorAll('.modal-tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.modal-tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.modal-tab-content').forEach(content => content.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(`modal-tab-${button.dataset.modalTab}`).classList.add('active');
+                });
+            });
+
+            if (df_mm_processed.length > 0) {
+                renderPublicFileCharts(df_mm_processed);
+            }
+        }
         
         function createChartData(df, yKey, label, color) {
             if (!df || !yKey || !df.some(d => d[yKey] !== undefined)) return null;
@@ -905,136 +1614,36 @@
                 data: df.filter(d => d.fatorPotencia).map(item => {
                     const fp = item.fatorPotencia;
                     let yValue;
-                    // CORREÇÃO: Invertendo a lógica para o gráfico
                     if (fp.type === 'capacitivo') {
-                        yValue = 1 + (1 - fp.value); // Mapeia para o intervalo [1, 2] (para cima)
+                        yValue = 1 + (1 - fp.value);
                     } else { // indutivo
-                        yValue = fp.value; // Mapeia para o intervalo [0, 1] (para baixo)
+                        yValue = fp.value;
                     }
                     return { x: item.DataHora.getTime(), y: yValue };
                 }),
                 borderColor: color,
                 tension: 0.1,
-                pointRadius: 0, // CORREÇÃO: Removendo os pontos
+                pointRadius: 0,
                 borderWidth: 2
             };
         }
 
         function renderCharts(chartDefinitions, dataframes) {
             const chartsContainer = document.getElementById('charts-container');
-            const defaultOptions = {
-                responsive: true,
-                scales: {
-                    x: {
-                        type: 'timeseries',
-                        grid: { 
-                            display: false
-                        },
-                        time: { 
-                            unit: 'day',
-                            tooltipFormat: 'dd/MM/yyyy HH:mm',
-                            displayFormats: { day: 'dd/MM' }
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(new Date(value));
-                            }
-                        }
-                    },
-                    y: {
-                       grid: { 
-                           display: false
-                       }
-                    }
-                }
-            };
-            const pfOptions = {
-                ...defaultOptions,
-                scales: {
-                    ...defaultOptions.scales,
-                    y: {
-                        min: 0,
-                        max: 2,
-                        grid: {
-                           display: false
-                        },
-                        ticks: {
-                            stepSize: 0.1,
-                            callback: function(value) {
-                                const val = parseFloat(value.toFixed(1));
-                                if (val === 1) return '1.0';
-                                // CORREÇÃO: Invertendo os labels
-                                if (val < 1) return `${val.toFixed(1)} Ind`;
-                                if (val > 1) return `${(2 - val).toFixed(1)} Cap`;
-                                return '';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
-                                const yValue = context.parsed.y;
-                                // CORREÇÃO: Invertendo os tooltips
-                                if (yValue <= 1) {
-                                    label += `${yValue.toFixed(4)} Indutivo`;
-                                } else {
-                                    label += `${(2 - yValue).toFixed(4)} Capacitivo`;
-                                }
-                                return label;
-                            }
-                        }
-                    },
-                    annotation: {
-                        annotations: {
-                            indutivoLine: {
-                                type: 'line',
-                                yMin: 0.92,
-                                yMax: 0.92,
-                                borderColor: 'rgb(255, 99, 132)',
-                                borderWidth: 2,
-                                borderDash: [6, 6],
-                                label: {
-                                    content: '0.92 Indutivo',
-                                    enabled: true,
-                                    position: 'start',
-                                    backgroundColor: 'rgba(255, 99, 132, 0.7)'
-                                }
-                            },
-                            capacitivoLine: {
-                                type: 'line',
-                                yMin: 1.08, // 1 + (1 - 0.92)
-                                yMax: 1.08,
-                                borderColor: 'rgb(54, 162, 235)',
-                                borderWidth: 2,
-                                borderDash: [6, 6],
-                                label: {
-                                    content: '0.92 Capacitivo',
-                                    enabled: true,
-                                    position: 'start',
-                                    backgroundColor: 'rgba(54, 162, 235, 0.7)'
-                                }
-                            }
-                        }
-                    }
-                }
-            };
+            if(!chartsContainer) return;
             
             // Adiciona gráficos de FP se houver dados
             if (dataframes.df_con_antigo || dataframes.df_dem_antigo) {
                  const pfDataset = createFatorPotenciaChartData(dataframes.df_con_antigo, 'FP Medidor Antigo', 'purple');
-                 if(pfDataset) chartDefinitions.push({ id: 'fp_antigo', title: 'Fator de Potência (Medidor Antigo)', datasets: [pfDataset], options: pfOptions });
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_antigo', title: 'Fator de Potência (Medidor Antigo)', datasets: [pfDataset], options: fpChartOptions });
             }
              if (dataframes.df_con_novo || dataframes.df_dem_novo) {
                  const pfDataset = createFatorPotenciaChartData(dataframes.df_con_novo, 'FP Medidor Novo', 'orange');
-                 if(pfDataset) chartDefinitions.push({ id: 'fp_novo', title: 'Fator de Potência (Medidor Novo)', datasets: [pfDataset], options: pfOptions });
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_novo', title: 'Fator de Potência (Medidor Novo)', datasets: [pfDataset], options: fpChartOptions });
             }
             if (dataframes.df_con || dataframes.df_dem) {
                  const pfDataset = createFatorPotenciaChartData(dataframes.df_con, 'Fator de Potência', 'purple');
-                 if(pfDataset) chartDefinitions.push({ id: 'fp_unico', title: 'Fator de Potência', datasets: [pfDataset], options: pfOptions });
+                 if(pfDataset) chartDefinitions.push({ id: 'fp_unico', title: 'Fator de Potência', datasets: [pfDataset], options: fpChartOptions });
             }
 
 
@@ -1042,23 +1651,47 @@
                 const validDatasets = def.datasets.filter(ds => ds !== null);
                 if (validDatasets.length > 0) {
                     const chartWrapper = document.createElement('div');
-                    chartWrapper.innerHTML = `
-                        <div id="capture-${def.id}" class="p-4 bg-white border rounded-lg">
-                            <h3 class="text-center font-semibold mb-2">${def.title}</h3>
-                            <canvas id="canvas-${def.id}"></canvas>
-                        </div>
-                        <div class="text-right my-2">
-                           <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico como Imagem</button>
-                        </div>
-                    `;
+                    chartWrapper.innerHTML = `<div id="capture-${def.id}" class="p-4 bg-white border rounded-lg"><h3 class="text-center font-semibold mb-2">${def.title}</h3><canvas id="canvas-${def.id}"></canvas></div><div class="text-right my-2"><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button></div>`;
                     chartsContainer.appendChild(chartWrapper);
-
                     const ctx = document.getElementById(`canvas-${def.id}`).getContext('2d');
-                    const newChart = new Chart(ctx, {
-                        type: 'line',
-                        data: { datasets: validDatasets },
-                        options: def.options || defaultOptions
-                    });
+                    const newChart = new Chart(ctx, { type: 'line', data: { datasets: validDatasets }, options: def.options || defaultChartOptions });
+                    activeCharts.push(newChart);
+                }
+            });
+        }
+        
+        function renderPublicFileCharts(df_processed) {
+            const chartsContainer = document.getElementById('charts-container-abnt');
+            if (!chartsContainer) return;
+
+            const createPublicChartData = (df, yKey, label, color) => {
+                if (!df || !yKey || !df.some(d => d[yKey] !== undefined)) return null;
+                return { label, data: df.map(item => ({ x: item.Timestamp.getTime(), y: item[yKey] })), borderColor: color, tension: 0.1, pointRadius: 0, borderWidth: 2 };
+            };
+            
+            const createPublicFpChartData = (df, label, color) => {
+                if (!df || !df.some(d => d.fatorPotencia)) return null;
+                return { label, data: df.filter(d => d.fatorPotencia).map(item => {
+                    const fp = item.fatorPotencia;
+                    let yValue = (fp.type === 'capacitivo') ? 1 + (1 - fp.value) : fp.value;
+                    return { x: item.Timestamp.getTime(), y: yValue };
+                }), borderColor: color, tension: 0.1, pointRadius: 0, borderWidth: 2 };
+            };
+
+            const chartDefinitions = [
+                { id: 'consumo_publico', title: 'Consumo (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)') ] },
+                { id: 'demanda_publico', title: 'Demanda (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)') ] },
+                { id: 'fp_publico', title: 'Fator de Potência (Arquivo Público)', datasets: [ createPublicFpChartData(df_processed, 'Fator de Potência', 'purple') ], options: fpChartOptions }
+            ];
+            
+            chartDefinitions.forEach(def => {
+                const validDatasets = def.datasets.filter(ds => ds !== null);
+                if (validDatasets.length > 0) {
+                    const chartWrapper = document.createElement('div');
+                    chartWrapper.innerHTML = `<div id="capture-${def.id}" class="p-4 bg-white border rounded-lg"><h3 class="text-center font-semibold mb-2">${def.title}</h3><canvas id="canvas-${def.id}"></canvas></div><div class="text-right my-2"><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button></div>`;
+                    chartsContainer.appendChild(chartWrapper);
+                    const ctx = document.getElementById(`canvas-${def.id}`).getContext('2d');
+                    const newChart = new Chart(ctx, { type: 'line', data: { datasets: validDatasets }, options: def.options || defaultChartOptions });
                     activeCharts.push(newChart);
                 }
             });
@@ -1071,6 +1704,8 @@
         
         function handleClear() {
             document.querySelectorAll('textarea').forEach(ta => ta.value = '');
+            publicFileInput.value = '';
+            publicFileName.textContent = '';
             messagePlaceholder.innerHTML = '';
         }
 
@@ -1109,9 +1744,18 @@
                 document.getElementById(`tab-${button.dataset.tab}`).classList.add('active');
             });
         });
+
+        publicFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                publicFileName.textContent = file.name;
+            } else {
+                publicFileName.textContent = '';
+            }
+        });
     });
 
-    // --- FUNÇÃO GLOBAL PARA COPIAR IMAGEM ---
+    // --- FUNÇÕES GLOBAIS ---
     function copyElementAsImage(elementId, button) {
         const element = document.getElementById(elementId);
         if (!element) return;
@@ -1140,6 +1784,54 @@
                 });
             });
         });
+    }
+
+    function exportTableToCSV(button) {
+        const data = window.publicFileData;
+        if (!data || data.length === 0) {
+            alert("Não há dados para exportar.");
+            return;
+        }
+
+        const originalText = button.innerText;
+        button.innerText = 'Exportando...';
+        button.disabled = true;
+
+        const headers = ["Data/Hora", "Posto Horario", "C1", "C2", "C3", "kWh fornecido", "kVArh indutivo", "kVArh capacitivo", "kW fornecido", "FP Valor", "FP Tipo"];
+        const csvRows = [headers.join(';')];
+
+        data.forEach(row => {
+            const values = [
+                dateFns.format(row.Timestamp, 'dd/MM/yyyy HH:mm:ss'),
+                row['Posto Horário'],
+                row.C1,
+                row.C2,
+                row.C3,
+                String(row['kWh fornecido']).replace('.',','),
+                String(row['kVArh indutivo']).replace('.',','),
+                String(row['kVArh capacitivo']).replace('.',','),
+                String(row['kW fornecido']).replace('.',','),
+                String(row.fatorPotencia.value).replace('.',','),
+                row.fatorPotencia.type
+            ];
+            csvRows.push(values.join(';'));
+        });
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'dados_detalhados.csv');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => {
+            button.innerText = originalText;
+            button.disabled = false;
+        }, 1000);
     }
     </script>
 </body>
