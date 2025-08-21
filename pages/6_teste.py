@@ -159,11 +159,17 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                 amanha_str = amanha.strftime("%d/%m/%Y")
 
                 chrome_options = Options()
-                chrome_options.add_argument("--start-maximized")
-                chrome_options.add_argument("--ignore-certificate-errors") # Equivalente a accept_insecure_certs
+                chrome_options.add_argument("--headless")  # Roda o Chrome em modo headless (sem interface gráfica)
+                chrome_options.add_argument("--no-sandbox")  # Necessário para rodar como root em ambientes de container
+                chrome_options.add_argument("--disable-dev-shm-usage") # Medida de estabilidade em containers
+                chrome_options.add_argument("--disable-gpu") # Desabilita a GPU, já que não há uma no servidor
+                chrome_options.add_argument("window-size=1920,1080") # Define um tamanho de janela para evitar problemas de layout
+                chrome_options.add_argument("--ignore-certificate-errors")
+
+                service = webdriver.chrome.service.Service(executable_path="/usr/bin/chromedriver")
 
                 with st.spinner("Abrindo navegador e fazendo login..."):
-                    driver = webdriver.Chrome(options=chrome_options)
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
                     driver.get("http://172.16.102.245:8082/hemera/hemera.jsp")
                     login(driver, inputUsuario, inputSenha, Tesp)
                     sleep(2)
