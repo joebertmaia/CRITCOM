@@ -176,36 +176,44 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                     )
                     driver.switch_to.frame(iframe)
 
-                    # Seleciona Controlador
+                    # Clica no campo do Controlador
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/div[1]/div/input"))).click()
+                    # Digita o Controlador
                     inputEmpresa = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[5]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")))
                     inputEmpresa.send_keys(controlador)
                     sleep(1)
+                    # Clica em Pesquisar
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[5]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button"))).click()
                     sleep(1)
+                    # Clica no Controlador
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[5]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr/td[3]/div/div"))).click()
                     sleep(1)
 
-                    # Seleciona Lote
+                    # Clica no campo do Lote
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/div[3]/div/input"))).click()
-                    sleep(1)
-                    inputEmpresa = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")
+                    # Digita o Lote
+                    inputEmpresa = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")))
                     inputEmpresa.send_keys(str(lote))
                     sleep(1)
-                    driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button").click()
+                    # Clica em Pesquisar
+                    WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button"))).click()
                     sleep(1)
+                    # Clica no Lote
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, f"//div[text()='{str(lote)}']"))).click()
-                    
-                    # Preenche outros campos
+                    sleep(1)
+
+                    # Preenche a data final da leitura como hoje+1
                     data_final = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/fieldset/div[3]/div/div/input")))
                     data_final.clear()
                     sleep(1)
                     data_final.send_keys(amanha_str)
                     sleep(1)
 
+                    # Seleciona a opção "Pendente de Aprovação"
                     lista_situacao = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[2]/div[7]/div/div/input[2]")
                     lista_situacao.click()
                     sleep(1)
+
                     for i in range(2):
                         lista_situacao.send_keys(Keys.ARROW_DOWN)
                         sleep(0.5)
