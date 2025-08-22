@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analisador de Medidores ABNT — HTML único</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #11141a;
+      --soft: #1a1f29;
+      --muted: #8a94a6;
+      --text: #e6e9ef;
+      --brand: #4f46e5;
+      --ok-bg: #12341f; --ok: #21c77e;
+      --warn-bg: #3a1c1d; --warn: #f87171;
+      --note-bg: #2a1e12; --note: #f4a261;
+      --chip: #222836;
+      --table-border: #2b3242;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI,
+      Roboto, Ubuntu, Cantarell, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji",
+      "Segoe UI Emoji"; background: var(--bg); color: var(--text);
+    }
+    header { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(11,12,16,.9), rgba(11,12,16,.6) 60%, transparent);
+      border-bottom: 1px solid #151a23; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
+    h1 { margin: 0; font-size: 22px; letter-spacing:.2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .row { display: grid; gap: 12px; }
+    @media(min-width:920px){ .row.cols-3{ grid-template-columns: repeat(3,1fr);} .row.cols-2{grid-template-columns:1fr 1fr} .row.cols-4{grid-template-columns:repeat(4,1fr)} .row.cols-5{grid-template-columns:repeat(5,1fr)} .row.cols-7{grid-template-columns:repeat(7,1fr)} }
+    .panel { background: var(--panel); border: 1px solid #151a23; border-radius: 14px; padding: 16px; }
+    .muted { color: var(--muted); }
+    .btn { appearance: none; border: 1px solid #263047; background: #192031; color: var(--text);
+      padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed }
+    .btn.primary{ background: linear-gradient(180deg, #4f46e5,#4338ca); border-color:#3d34c4 }
+    .input { border:1px solid #20283a; background: #121826; color: var(--text); padding:10px 12px; border-radius:10px; width:100% }
+    .card { background: var(--soft); border:1px solid #1d2330; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:6px; height:100% }
+    .card .k { font-size: 12px; color: var(--muted); }
+    .card .v { font-size: 18px; font-weight: 800; }
+    .card.ok { background: var(--ok-bg); border-color: #1f5136; }
+    .card.ok .v { color: var(--ok); }
+    .card.bad { background: var(--warn-bg); border-color: #5b2224; }
+    .card.bad .v { color: var(--warn); }
+    .chip { background: var(--chip); border:1px solid #1f2635; border-radius: 999px; padding:6px 10px; display:inline-flex; gap:8px; align-items:center; font-size:12px; }
+    .tabs { display:flex; gap:6px; border-bottom:1px solid #151a23; margin-top: 8px; }
+    .tab { padding:10px 12px; border:1px solid #151a23; border-bottom:none; border-radius:10px 10px 0 0; background:#101521; color:var(--muted); cursor:pointer; }
+    .tab.active { background: #131a2a; color: var(--text); }
+    .section { display:none; }
+    .section.active { display:block; }
+
+    table { width:100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--table-border); padding: 8px 10px; text-align:left; }
+    thead th { position: sticky; top: 0; background: #121826; z-index:1 }
+    tbody tr:nth-child(even){ background:#0f1420 }
+
+    .grid5{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px }
+    .divider{ height:1px; background:#131827; margin:16px 0 }
+
+    details{ background:#0f1420; border:1px solid #161d2b; border-radius:10px; }
+    details>summary{ padding:10px 12px; cursor:pointer; }
+    details>.content{ padding: 0 12px 12px 12px; }
+
+    .timeline{ width:100%; height:240px; background:#0f1420; border:1px solid #1a2131; border-radius:12px; overflow:hidden; }
+    .timeline svg{ width:100%; height:100% }
+
+    .range-wrap{ display:grid; gap:8px; grid-template-columns: 1fr 1fr; align-items:end }
+    .hint{ font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Analisador de Arquivo Público (ABNT)</h1>
+      <div class="sub">HTML único • funciona 100% offline • sem dependências externas</div>
+    </div>
+  </header>
+  <main class="wrap" style="margin-top:14px">
+    <div class="panel">
+      <div class="row cols-2">
+        <div>
+          <label class="muted">Selecione o arquivo (.txt)</label>
+          <input id="file" class="input" type="file" accept=".txt,.log,.dat,.csv,.abnt,.*/plain" />
+        </div>
+        <div style="display:flex; gap:10px; align-items:end;">
+          <button id="analisar" class="btn primary" disabled>🔎 Analisar arquivo</button>
+          <span class="hint" id="fileHint">Nenhum arquivo carregado.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs" style="margin-top:12px">
+      <button class="tab active" data-tab="tab1">Parâmetros Gerais</button>
+      <button class="tab" data-tab="tab2">Análise de MM</button>
+    </div>
+
+    <section id="tab1" class="section active">
+      <div class="panel" id="parametrosPanel">
+        <div class="muted">Carregue e analise um arquivo para ver os parâmetros.</div>
+      </div>
+      <div class="panel" id="faltasPanel" style="margin-top:12px; display:none"></div>
+      <div class="panel" id="alteracoesPanel" style="margin-top:12px; display:none"></div>
+    </section>
+
+    <section id="tab2" class="section">
+      <div class="panel" id="mmPanel">
+        <div class="muted">Carregue e analise um arquivo para ver a Memória de Massa.</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+// ======= Utilidades =======
+const $ = (sel, el=document)=> el.querySelector(sel);
+const $$ = (sel, el=document)=> Array.from(el.querySelectorAll(sel));
+const fmtDate = (d)=>{
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
+const fmtTime = (d)=>{
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return `${hh}:${mi}:${ss}`;
+};
+const parseDDMMYY_HHMMSS = (s)=>{
+  // 'dd/mm/yy HH:MM:SS' -> Date
+  const [d, t] = s.split(' ');
+  const [dd, mm, yy] = d.split('/').map(Number);
+  const [HH, MM, SS] = t.split(':').map(Number);
+  const year = yy + 2000; // heurística
+  return new Date(year, mm-1, dd, HH, MM, SS);
+};
+const addMinutes = (date, mins)=> new Date(date.getTime() + mins*60000);
+
+// 1-based substring
+function obterDados(data, posicao, tamanho){
+  const i = posicao - 1;
+  return (data.length >= i + tamanho) ? data.slice(i, i+tamanho) : "";
+}
+
+// ======= Cálculo Fator de Potência (PLA-WIN) =======
+function calcular_fator_potencia_plawin(row){
+  const w = row.Wh ?? 0;
+  const var_ind = row.varind ?? 0;
+  const var_cap = row.varcap ?? 0;
+  const q_net = var_ind - var_cap;
+  if (w === 0){
+    if (q_net === 0) return "100"; // unitário, mas sem carga
+    return q_net < 0 ? "0 C" : "0 L";
+  }
+  if (q_net > 0){
+    const s = Math.sqrt(w*w + q_net*q_net);
+    const fp = s !== 0 ? (w / s) : 0;
+    return `${Math.round(fp*100)} L`;
+  } else if (q_net < 0){
+    return "100 C"; // lógica especial
+  } else {
+    return "100 L"; // unitário rotulado como L
+  }
+}
+
+// ======= Processamento: Parâmetros =======
+function processar_parametros_gerais(file_content){
+  const dados = file_content.replaceAll('\n','').replaceAll('\r','');
+  const colunas = [
+    'medidor','data_hora_leitura','data_hora_mm','intervalo_mm','intervalo_demanda',
+    'constante_canal_1','constante_canal_2','constante_canal_3','estado_bateria','carga_md','versao_hardware',
+    'reservado_ativo','horario_reservado','reservado_sabado','reservado_domingo','reservado_feriado',
+    'horario_verao','horario_FP','horario_P','horario_indutivo','horario_capacitivo',
+    'data_reposicao_demanda','hora_reposicao_demanda','grandeza_1o_canal','grandeza_2o_canal','grandeza_3o_canal'
+  ];
+  for(let i=1;i<=15;i++) colunas.push(`feriado_${i}`);
+  colunas.push('data_inicio_conj1_segm_horarios','data_inicio_conj2_segm_horarios','hora_inicio_posto_P_conj2','hora_inicio_posto_FP_conj2','hora_inicio_posto_reservado_conj2');
+
+  const medidor = obterDados(dados,1,8);
+  const data_hora_leitura = `${obterDados(dados,21,2)}/${obterDados(dados,23,2)}/${obterDados(dados,25,2)} ${obterDados(dados,15,2)}:${obterDados(dados,17,2)}:${obterDados(dados,19,2)}`;
+  const data_hora_mm = `${obterDados(dados,21,2)}/${obterDados(dados,23,2)}/${obterDados(dados,25,2)} ${obterDados(dados,29,2)}:${obterDados(dados,31,2)}:${obterDados(dados,33,2)}`;
+  const intervalo_mm = obterDados(dados,2317,2);
+  const intervalo_demanda = obterDados(dados,167,2);
+  const constante_canal_1 = `${obterDados(dados,261,6)}/${obterDados(dados,267,6)}`;
+  const constante_canal_2 = `${obterDados(dados,273,6)}/${obterDados(dados,279,6)}`;
+  const constante_canal_3 = `${obterDados(dados,285,6)}/${obterDados(dados,291,6)}`;
+  const estado_bateria = obterDados(dados,297,2) === '00' ? 'Bom':'Ruim';
+  const carga_md = obterDados(dados,1741,4);
+  const versao_hardware = obterDados(dados,1751,4);
+  const reservado_ativo = obterDados(dados,303,2) !== '00' ? 'Sim':'Não';
+  const reservado_sabado = obterDados(dados,2323,2);
+  const reservado_domingo = obterDados(dados,2325,2);
+  const reservado_feriado = obterDados(dados,2327,2);
+  const horario_verao_val = `${obterDados(dados,2233,2)}/${obterDados(dados,2235,2)}`;
+  const horario_verao = (horario_verao_val==='00/00') ? 'Desativado' : horario_verao_val;
+  const horario_FP = `${obterDados(dados,121,2)}:${obterDados(dados,123,2)}`;
+  const horario_P = `${obterDados(dados,113,2)}:${obterDados(dados,115,2)}`;
+  const horario_reservado = `${obterDados(dados,141,2)}:${obterDados(dados,143,2)}`;
+  const horario_indutivo = `${obterDados(dados,2341,2)}:${obterDados(dados,2343,2)}`;
+  const horario_capacitivo = `${obterDados(dados,2349,2)}:${obterDados(dados,2351,2)}`;
+  const data_reposicao_demanda = `${obterDados(dados,47,2)}/${obterDados(dados,49,2)}/${obterDados(dados,51,2)}`;
+  const hora_reposicao_demanda = `${obterDados(dados,41,2)}:${obterDados(dados,43,2)}:${obterDados(dados,55,2)}`;
+  const grandeza_1o_canal = obterDados(dados,2309,2);
+  const grandeza_2o_canal = obterDados(dados,2311,2);
+  const grandeza_3o_canal = obterDados(dados,2313,2);
+  const feriados = [];
+  for(let p=171; p<171+15*6; p+=6){
+    feriados.push(`${obterDados(dados,p,2)}/${obterDados(dados,p+2,2)}/${obterDados(dados,p+4,2)}`);
+  }
+  const data_inicio_conj1_segm_horarios = `${obterDados(dados,2239,2)}/${obterDados(dados,2241,2)}`;
+  const data_inicio_conj2_segm_horarios = `${obterDados(dados,2243,2)}/${obterDados(dados,2245,2)}`;
+  const hora_inicio_posto_P_conj2 = `${obterDados(dados,2255,2)}:${obterDados(dados,2257,2)}`;
+  const hora_inicio_posto_FP_conj2 = `${obterDados(dados,2271,2)}:${obterDados(dados,2273,2)}`;
+  const hora_inicio_posto_reservado_conj2 = `${obterDados(dados,2287,2)}:${obterDados(dados,2289,2)}`;
+
+  const linha = [
+    medidor, data_hora_leitura, data_hora_mm, intervalo_mm, intervalo_demanda,
+    constante_canal_1, constante_canal_2, constante_canal_3, estado_bateria, carga_md, versao_hardware,
+    reservado_ativo, horario_reservado, reservado_sabado, reservado_domingo, reservado_feriado,
+    horario_verao, horario_FP, horario_P, horario_indutivo, horario_capacitivo,
+    data_reposicao_demanda, hora_reposicao_demanda, grandeza_1o_canal, grandeza_2o_canal, grandeza_3o_canal,
+    ...feriados,
+    data_inicio_conj1_segm_horarios, data_inicio_conj2_segm_horarios,
+    hora_inicio_posto_P_conj2, hora_inicio_posto_FP_conj2, hora_inicio_posto_reservado_conj2
+  ];
+  const obj = Object.fromEntries(colunas.map((c,i)=>[c, linha[i] ?? '']));
+
+  const grandezas = {
+    '01':'Wh','10':'varind','11':'varcap','14':'-Wh','15':'-varind','16':'-varcap',
+    '17':'v_a','18':'v_b','19':'v_c','20':'i_a','21':'i_b','22':'i_c'
+  };
+
+  return { df_parametros: obj, grandezas };
+}
+
+// ======= Memória de Massa =======
+function processar_memoria_massa(file_content_raw, params, grandezas_legend){
+  const linhas = file_content_raw.split(/\r?\n/).filter(l=> l.startsWith('SALV') || l.startsWith('CONT'));
+  if (!linhas.length) return [];
+  const c1=[] , c2=[], c3=[];
+  for (const linha of linhas){
+    for(let i=0;i<24;i++){
+      const base = 13 + i*12; // 1-based
+      c1.push(parseInt(obterDados(linha, base, 4) || '0', 10));
+      c2.push(parseInt(obterDados(linha, base+4, 4) || '0', 10));
+      c3.push(parseInt(obterDados(linha, base+8, 4) || '0', 10));
+    }
+  }
+  let timestamps = [];
+  try{
+    const last = parseDDMMYY_HHMMSS(params['data_hora_mm']);
+    const num = c1.length;
+    const intervalo = parseInt(params['intervalo_mm']||'5',10);
+    const start = addMinutes(last, -intervalo*(num-1));
+    for(let i=0;i<num;i++) timestamps.push(addMinutes(start, i*intervalo));
+  }catch(e){ return []; }
+
+  // Feriados
+  const feriados = Object.entries(params).filter(([k])=>k.startsWith('feriado_')).map(([,v])=>v).filter(v=> v && v!=='00/00/00');
+  const feriadosDates = new Set();
+  for (const f of feriados){
+    const m = f.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+    if(!m) continue; const [_,dd,mm,yy] = m; const d=new Date(2000+parseInt(yy), parseInt(mm)-1, parseInt(dd));
+    if(!isNaN(d)) feriadosDates.add(fmtDate(d));
+  }
+  const timeP = params['horario_P'];
+  const timeFP = params['horario_FP'];
+  const reservadoAtivo = params['reservado_ativo']==='Sim';
+  const timeRes = reservadoAtivo ? params['horario_reservado'] : null;
+  const toTime = (hhmm)=>{ const [h,m]=hhmm.split(':').map(Number); return {h,m}; };
+  const tp = toTime(timeP), tfp = toTime(timeFP), tres = timeRes?toTime(timeRes):null;
+
+  function postoHorario(d){
+    const dow = d.getDay(); // 0=Dom
+    if (dow===0 || dow===6) return 'Fora Ponta';
+    if (feriadosDates.has(fmtDate(d))) return 'Fora Ponta';
+    const mins = d.getHours()*60 + d.getMinutes();
+    const inRange = (a,b)=> mins> (a.h*60+a.m) && mins <= (b.h*60+b.m);
+    if (reservadoAtivo && tres && inRange(tres, tfp)) return 'Reservado';
+    if (inRange(tp, tfp)) return 'Ponta';
+    return 'Fora Ponta';
+  }
+
+  // Map grandezas dos canais
+  const g1 = grandezas_legend[ params['grandeza_1o_canal'] ];
+  const g2 = grandezas_legend[ params['grandeza_2o_canal'] ];
+  const g3 = grandezas_legend[ params['grandeza_3o_canal'] ];
+
+  const rows = [];
+  for(let i=0;i<timestamps.length;i++){
+    const row = {
+      Timestamp: timestamps[i],
+      Data: fmtDate(timestamps[i]),
+      Hora: fmtTime(timestamps[i]),
+      C1: c1[i], C2: c2[i], C3: c3[i]
+    };
+    if (g1 && ['01','10','11','14','15','16'].includes(params['grandeza_1o_canal'])) row[g1] = c1[i]*12;
+    if (g2 && ['01','10','11','14','15','16'].includes(params['grandeza_2o_canal'])) row[g2] = c2[i]*12;
+    if (g3 && ['01','10','11','14','15','16'].includes(params['grandeza_3o_canal'])) row[g3] = c3[i]*12;
+    // Garantir colunas Wh/varind/varcap para FP
+    row.Wh ??= 0; row.varind ??= 0; row.varcap ??= 0;
+    row['Fator de Potência'] = calcular_fator_potencia_plawin(row);
+    row['Posto Horário'] = postoHorario(timestamps[i]);
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ======= Faltas & Alterações =======
+function processar_alteracoes_e_faltas(file_content){
+  const dados = file_content.replaceAll('\n','').replaceAll('\r','');
+  const medidor = obterDados(dados,1,8);
+  const faltas = [];
+  for(let i=0;i<15;i++){
+    const pos = 329 + i*24;
+    const falta = obterDados(dados,pos,24);
+    if (falta && falta !== '000000000000000000000000'){
+      const inicio = `${falta.slice(6,8)}/${falta.slice(8,10)}/${falta.slice(10,12)} ${falta.slice(0,2)}:${falta.slice(2,4)}:${falta.slice(4,6)}`;
+      const fim = `${falta.slice(18,20)}/${falta.slice(20,22)}/${falta.slice(22,24)} ${falta.slice(12,14)}:${falta.slice(14,16)}:${falta.slice(16,18)}`;
+      faltas.push({medidor, data_inicio:inicio, data_fim:fim});
+    }
+  }
+  const codigos = {11:'Envio de senha',12:'Programação de código de cliente',13:'Pedido de string',20:'Leitura com reposição de demanda',21:'Leitura s/ reposição atuais',22:'Leitura s/ reposição anteriores',23:'Leitura de regs. após última reposição',99:'Comando para carga rápida de programa'};
+  const alteracoes=[];
+  for(let i=0;i<15;i++){
+    const pos = 1927 + i*20;
+    const s = obterDados(dados,pos,20);
+    if (s && s !== '00000000000000000000'){
+      const codigo = parseInt(s.slice(0,2),10);
+      const num_serie_leitor = s.slice(2,8);
+      const hora = `${s.slice(8,10)}:${s.slice(10,12)}:${s.slice(12,14)}`;
+      const data = `${s.slice(14,16)}/${s.slice(16,18)}/${s.slice(18,20)}`;
+      const descricao = codigos[codigo] || `Código desconhecido (${codigo})`;
+      alteracoes.push({Medidor:medidor, Leitora:num_serie_leitor, Código:codigo, Descrição:descricao, 'Data da alteração': `${data} ${hora}`});
+    }
+  }
+  // remover duplicatas simples
+  const uniq = (arr, key)=> Array.from(new Map(arr.map(o=>[JSON.stringify(o), o])).values());
+  return { df_faltas: uniq(faltas), df_alteracoes: uniq(alteracoes) };
+}
+
+// ======= UI helpers =======
+function cardHTML(title, value, cls=''){
+  return `<div class="card ${cls}"><div class="k">${title}</div><div class="v">${value||'-'}</div></div>`;
+}
+function tableHTML(rows){
+  if (!rows || !rows.length) return '<div class="muted">Sem dados.</div>';
+  const cols = Object.keys(rows[0]);
+  const thead = '<thead><tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead>';
+  const tbody = '<tbody>' + rows.map(r=>'<tr>'+cols.map(c=>`<td>${(r[c]??'')}</td>`).join('')+'</tr>').join('') + '</tbody>';
+  return `<div style="max-height:360px; overflow:auto"><table>${thead}${tbody}</table></div>`;
+}
+
+function renderParametros(params, grandezas){
+  const panel = $('#parametrosPanel');
+  const okMM = params['intervalo_mm'] === '05';
+  const okDem = params['intervalo_demanda'] === '15';
+  const c1 = params['constante_canal_1'], c2=params['constante_canal_2'], c3=params['constante_canal_3'];
+  const iguais = (c1===c2 && c1===c3);
+  // Header
+  let html = '';
+  html += `<div class="row cols-7">
+    ${cardHTML('Medidor', params['medidor'])}
+    ${cardHTML('Data/Hora da Leitura', params['data_hora_leitura'])}
+    ${cardHTML('MM (min)', params['intervalo_mm'], okMM?'ok':'bad')}
+    ${cardHTML('Demanda (min)', params['intervalo_demanda'], okDem?'ok':'bad')}
+    ${cardHTML('Bateria', params['estado_bateria'], params['estado_bateria']==='Bom'?'ok':'bad')}
+    ${cardHTML('Carga do MD', params['carga_md'])}
+    ${cardHTML('Versão do Hardware', params['versao_hardware'])}
+  </div>`;
+  html += '<div class="divider"></div>';
+  // Constantes
+  const maioria = (vals)=>{ const m=new Map(); vals.forEach(v=>m.set(v,(m.get(v)||0)+1)); let max=0, who=vals[0]; for(const [k,v] of m){ if(v>max){max=v; who=k;} } return who; };
+  const maj = maioria([c1,c2,c3]);
+  const cls = (v)=> iguais? 'ok' : (v===maj? 'ok':'bad');
+  html += `<div class="muted" style="margin-bottom:8px">Constantes</div>
+  <div class="row cols-3">
+    ${cardHTML('Canal 1', c1, cls(c1))}
+    ${cardHTML('Canal 2', c2, cls(c2))}
+    ${cardHTML('Canal 3', c3, cls(c3))}
+  </div>`;
+  html += '<div class="divider"></div>';
+  // Grandezas
+  html += `<div class="muted" style="margin-bottom:8px">Grandezas dos Canais</div>
+  <div class="row cols-3">
+    ${cardHTML('Canal 1', grandezas[params['grandeza_1o_canal']]||'N/A')}
+    ${cardHTML('Canal 2', grandezas[params['grandeza_2o_canal']]||'N/A')}
+    ${cardHTML('Canal 3', grandezas[params['grandeza_3o_canal']]||'N/A')}
+  </div>`;
+  html += '<div class="divider"></div>';
+  // Reservado
+  const sabOK = params['reservado_sabado']==='06';
+  const domOK = params['reservado_domingo']==='06';
+  const ferOK = params['reservado_feriado']==='06';
+  html += `<div class="muted" style="margin-bottom:8px">Horário Reservado</div>
+  <div class="row cols-5">
+    ${cardHTML('Ativo?', params['reservado_ativo'])}
+    ${cardHTML('Horário', params['horario_reservado'])}
+    ${cardHTML('Sábado', params['reservado_sabado'], sabOK?'':'bad')}
+    ${cardHTML('Domingo', params['reservado_domingo'], domOK?'':'bad')}
+    ${cardHTML('Feriado', params['reservado_feriado'], ferOK?'':'bad')}
+  </div>`;
+  html += '<div class="divider"></div>';
+  html += `<div class="row cols-7">
+    ${cardHTML('Horário Verão', params['horario_verao'])}
+    ${cardHTML('Horário Ponta', params['horario_P'])}
+    ${cardHTML('Horário Fora Ponta', params['horario_FP'])}
+    ${cardHTML('Horário Capacitivo', params['horario_capacitivo'])}
+    ${cardHTML('Horário Indutivo', params['horario_indutivo'])}
+    ${cardHTML('Data Reposição', params['data_reposicao_demanda'])}
+    ${cardHTML('Hora Reposição', params['hora_reposicao_demanda'])}
+  </div>`;
+  html += '<div class="divider"></div>';
+  // Feriados
+  const feriados = Object.entries(params).filter(([k])=>k.startsWith('feriado_')).map(([,v])=>v).filter(v=> v && v!=='00/00/00');
+  html += `<div class="muted" style="margin-bottom:8px">Feriados Cadastrados</div>`;
+  if(!feriados.length){
+    html += `<div class="chip">Nenhum feriado cadastrado.</div>`;
+  } else {
+    html += '<div class="grid5">';
+    const today = new Date();
+    for (const f of feriados){
+      let cls='';
+      const m = f.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+      if (m){ const d=new Date(2000+parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1])); if (d<today) cls='note'; else cls='ok'; }
+      html += `<div class="card ${cls}"><div class="v" style="font-size:16px">${f}</div></div>`;
+    }
+    html += '</div>';
+  }
+  panel.innerHTML = html;
+}
+
+function renderFaltas(df){
+  const panel = $('#faltasPanel');
+  if (!df || !df.length){ panel.style.display='block'; panel.innerHTML='<div class="muted">Nenhuma falta de energia registrada no arquivo.</div>'; return; }
+  panel.style.display='block';
+  // timeline dados
+  const pts=[];
+  const rows = df.map(r=>({
+    inicio: parseDDMMYY_HHMMSS(r.data_inicio),
+    fim: parseDDMMYY_HHMMSS(r.data_fim)
+  })).sort((a,b)=> a.inicio-b.inicio);
+  for (const r of rows){
+    pts.push({t:r.inicio, s:1},{t:r.inicio, s:0},{t:r.fim,s:0},{t:r.fim,s:1});
+  }
+  // montar SVG step
+  let svg='';
+  if (pts.length){
+    const minT = Math.min(...pts.map(p=>p.t));
+    const maxT = Math.max(...pts.map(p=>p.t));
+    const W=960, H=220, pad=30;
+    const x = (t)=> pad + ( (t - minT) / (maxT - minT || 1) ) * (W-2*pad);
+    const y = (s)=> pad + (1-s)*(H-2*pad);
+    let d = '';
+    const sorted = pts.sort((a,b)=> a.t-b.t);
+    for (let i=0;i<sorted.length;i++){
+      const px = x(sorted[i].t), py = y(sorted[i].s);
+      d += (i? ' L ':'M ') + px + ' ' + py;
+    }
+    svg = `<div class="timeline"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stop-color="#22c55e"/>
+          <stop offset="100%" stop-color="#60a5fa"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#0f1420"/>
+      <path d="${d}" fill="none" stroke="url(#grad)" stroke-width="2.5"/>
+      <g fill="#8a94a6" font-size="11">
+        <text x="${x(sorted[0].t)}" y="${H-6}">${fmtDate(new Date(sorted[0].t))} ${fmtTime(new Date(sorted[0].t))}</text>
+        <text x="${x(sorted[sorted.length-1].t)-120}" y="${H-6}">${fmtDate(new Date(sorted[sorted.length-1].t))} ${fmtTime(new Date(sorted[sorted.length-1].t))}</text>
+      </g>
+      <g fill="#8a94a6" font-size="11">
+        <text x="6" y="${y(1)}">Ligado</text>
+        <text x="6" y="${y(0)}">Desligado</text>
+      </g>
+    </svg></div>`;
+  }
+  panel.innerHTML = `<h3 style="margin-top:0">Faltas de Energia Registradas</h3>${svg}
+  <div class="divider"></div>
+  <div class="muted" style="margin-bottom:6px">Detalhes das Interrupções</div>
+  ${tableHTML(df.map(r=>{
+    const di = parseDDMMYY_HHMMSS(r.data_inicio), dfim = parseDDMMYY_HHMMSS(r.data_fim);
+    const dur = dfim - di; const days = Math.floor(dur/86400000);
+    const hours = Math.floor((dur%86400000)/3600000); const mins = Math.floor((dur%3600000)/60000);
+    return { 'Início': r.data_inicio, 'Fim': r.data_fim, 'Duração': `${days}d ${hours}h ${mins}m` };
+  }))}`;
+}
+
+function renderAlteracoes(df){
+  const panel = $('#alteracoesPanel');
+  panel.style.display='block';
+  panel.innerHTML = `<h3 style="margin-top:0">Alterações Registradas</h3>` + (df && df.length ? tableHTML(df.map(({Medidor, ...rest})=>rest)) : '<div class="muted">Nenhuma alteração registrada no arquivo.</div>');
+}
+
+function renderMM(rows, params, grandezas){
+  const panel = $('#mmPanel');
+  if(!rows || !rows.length){ panel.innerHTML='<div class="muted">Não foi possível processar os dados da Memória de Massa.</div>'; return; }
+
+  const minTs = rows[0].Timestamp, maxTs = rows[rows.length-1].Timestamp;
+  const stepMin = parseInt(params['intervalo_mm']||'5',10);
+  const toLocalDateTime = (d)=>{ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const da=String(d.getDate()).padStart(2,'0'); const hh=String(d.getHours()).padStart(2,'0'); const mi=String(d.getMinutes()).padStart(2,'0'); return `${y}-${m}-${da}T${hh}:${mi}`; };
+
+  panel.innerHTML = `
+    <h3 style="margin-top:0">Análise de Memória de Massa</h3>
+    <div class="range-wrap">
+      <div>
+        <label class="muted">Início</label>
+        <input id="dtStart" class="input" type="datetime-local" step="${stepMin*60}" />
+      </div>
+      <div>
+        <label class="muted">Fim</label>
+        <input id="dtEnd" class="input" type="datetime-local" step="${stepMin*60}" />
+      </div>
+    </div>
+    <div class="divider"></div>
+    <details open>
+      <summary>Ver dados detalhados da Memória de Massa (filtrado)</summary>
+      <div class="content" id="mmTable"></div>
+    </details>
+    <div class="divider"></div>
+    <div>
+      <div class="muted" style="margin-bottom:6px">Consumo Sumarizado por Posto Horário (filtrado)</div>
+      <div class="row cols-3" id="mmSummary"></div>
+    </div>
+  `;
+  const $start = $('#dtStart', panel); const $end = $('#dtEnd', panel); const $tbl = $('#mmTable', panel); const $sum = $('#mmSummary', panel);
+  $start.value = toLocalDateTime(minTs); $end.value = toLocalDateTime(maxTs);
+
+  function filtrar(){
+    const s = new Date($start.value), e = new Date($end.value);
+    const sel = rows.filter(r=> r.Timestamp >= s && r.Timestamp <= e);
+    // tabela (sem Timestamp)
+    const trows = sel.map(({Timestamp, ...rest})=>({ ...rest }));
+    $tbl.innerHTML = tableHTML(trows);
+    // sumarização: usar grandeza do Canal 1
+    const gcode = params['grandeza_1o_canal'];
+    const gname = grandezas[gcode];
+    if (gname && sel.length){
+      const sums = { 'Ponta':0, 'Fora Ponta':0, 'Reservado':0 };
+      for (const r of sel){ sums[r['Posto Horário']] = (sums[r['Posto Horário']]||0) + (r[gname]||0); }
+      const conv = (v)=> (v/12/1000).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+      $sum.innerHTML = `${cardHTML('Consumo Ponta (kWh)', conv(sums['Ponta']))}${cardHTML('Consumo Fora Ponta (kWh)', conv(sums['Fora Ponta']))}` + (sums['Reservado']>0? cardHTML('Consumo Reservado (kWh)', conv(sums['Reservado'])):'');
+    } else {
+      $sum.innerHTML = '<div class="muted">A grandeza do Canal 1 não é apropriada para sumarização ou não foi encontrada.</div>';
+    }
+  }
+  $start.addEventListener('change', filtrar); $end.addEventListener('change', filtrar);
+  filtrar();
+}
+
+// ======= Fluxo principal =======
+let FILE_TEXT = '';
+let STATE = { params:null, grandezas:null, mm:[], faltas:[], alteracoes:[] };
+
+$('#file').addEventListener('change', (ev)=>{
+  const f = ev.target.files?.[0];
+  $('#fileHint').textContent = f ? `Arquivo: ${f.name} (${(f.size/1024).toFixed(1)} KB)` : 'Nenhum arquivo carregado.';
+  $('#analisar').disabled = !f;
+});
+
+$('#analisar').addEventListener('click', async ()=>{
+  const f = $('#file').files?.[0]; if (!f) return;
+  $('#analisar').disabled = true; $('#analisar').textContent = '⏳ Processando...';
+  try{
+    FILE_TEXT = await f.text();
+    const { df_parametros, grandezas } = processar_parametros_gerais(FILE_TEXT);
+    const mm = processar_memoria_massa(FILE_TEXT, df_parametros, grandezas);
+    const { df_faltas, df_alteracoes } = processar_alteracoes_e_faltas(FILE_TEXT);
+    STATE = { params: df_parametros, grandezas, mm, faltas: df_faltas, alteracoes: df_alteracoes };
+
+    renderParametros(STATE.params, STATE.grandezas);
+    renderFaltas(STATE.faltas);
+    renderAlteracoes(STATE.alteracoes);
+    renderMM(STATE.mm, STATE.params, STATE.grandezas);
+  } catch(e){
+    alert('Ocorreu um erro ao processar o arquivo. Verifique o formato ABNT.\n\nDetalhes: '+ e);
+    console.error(e);
+  } finally {
+    $('#analisar').disabled = false; $('#analisar').textContent = '🔎 Analisar arquivo';
+  }
+});
+
+// Tabs
+$$('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    $$('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    $$('.section').forEach(s=> s.classList.remove('active'));
+    $('#'+btn.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
