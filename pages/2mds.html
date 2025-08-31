@@ -9,12 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Bibliotecas para Gráficos e Captura de Imagem -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
-    <!-- Plugin para anotações no gráfico -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js"></script>
 
     <!-- Estilos personalizados -->
     <style>
@@ -88,6 +85,10 @@
         .modal-tab-content.active {
             display: block;
         }
+        /* Forçar a cor do texto da legenda do ApexCharts a ser escura */
+        .apexcharts-legend-text {
+            color: #373d3f !important;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,7 +100,7 @@
         
         <!-- Cabeçalho -->
         <header class="flex items-center gap-4 mb-6 pb-4 border-b">
-            <img src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQyOSIgaGVpZ2h0PSI0MjUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KCiA8ZyBjbGFzcz0ibGF5ZXIiIGRpc3BsYXk9ImlubGluZSI+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDxnIGlkPSJzdmdfMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjc1IC0yOTkuNTIpIHRyYW5zbGF0ZSgwIDI5OS41MikgdHJhbnNsYXRlKDQxLjc1IDApIHRyYW5zbGF0ZSgtNSAwKSB0cmFuc2xhdGUoMCAtMjk3LjMpIG1hdHJpeCgxIDAgMCAxIC02NS43NSAwKSI+CiAgIDxwYXRoIGQ9Im0yMjIuNTEsMjk3LjczYzUuNTEsMC4wMSAxMS4wMywwIDE2LjU0LDBjOS4yNiwtMC4wMSAxOC41MiwwIDI3Ljc4LDAuMDFjMTAuNiwwLjAxIDIxLjIxLDAuMDEgMzEuODIsLTAuMDFjOS4yLDAgMTguNCwtMC4wMSAyNy42LDBjNS40NSwwIDEwLjksMCAxNi4zNiwwYzE5LjkxLC0wLjAzIDM5LjhgMCA1OS42OCwxLjE4YzAuNywwLjA0IDEuMzksMC4wOCAyLjEsMC4xMmMyOC4zNywxLjcgNTIuMTQsMTAuOTcgNzEuNzMsMzIuMjdjMjAuMTcsMjMuOTYgMjMuMDQsNTEuODEgMjMuMDMsODEuOTVjMCwyLjE0IDAsNC4yOCAwLjAxLDYuNDJjMC4wMSw1Ljc4IDAuMDEsMTEuNTYgMC4wMSwxNy4zNWMwLDMuNjIgMCw3LjI1IDAsMTAuODhjMC4wMSwxMi42OCAwLjAyLDI1LjM3IDAuMDIsMzguMDVjMCwxMS43NyAwLjAxLDIzLjUzIDAuMDIsMzUuMjljMC4wMiwxMC4xNSAwLjAyLDIwLjI5IDAuMDIsMzAuNDRjMCw2LjA0IDAsMTIuMDggMC4wMSwxOC4xMWMwLjAxLDUuNyAwLjAxLDExLjM5IDAuMDEsMTcuMDljMCwyLjA2IDAsNC4xMyAwLDYuMmMwLjExLDM3Ljk4IC0yLjU4LDczLjk1IC0zMC41NywxMDIuMjdjLTE0LjA4LDEzLjA5IC0zMi4wOSwyMS4yNiAtNTAuOTMsMjQuMzRjLTAuNzIsMC4xMiAtMS40NSwwLjI0IC0yLjIsMC4zNmMtMTQuOSwyLjIzIC0zMC4wMSwyLjEgLTQ1LjA0LDIuMDljLTIuMTIsMC4wMSAtNC4yNCwwLjAxIC02LjM1LDAuMDFjLTUuNywwLjAxIC0xMS40MSwwLjAyIC0xNy4xMSwwLjAyYy0zLjU3LDAgLTcuMTUsMCAtMTAuNzIsMGMtMTIuNTEsMC4wMSAtMjUuMDIsMC4wMSAtMzcuNTIsMC4wMWMtMTEuNiwwIC0yMy4yMSwwLjAxIC0zNC44MSwwLjAzYy0xMC4wMSwwLjAxIC0yMC4wMiwwLjAyIC0zMC4wMiwwLjAyYy01Ljk2LDAgLTExLjkyLDAgLTE3Ljg3LDAuMDFjLTUuNjEsMC4wMSAtMTEuMjIsMC4wMSAtMTYuODMsMGMtMi4wNCwwIC00LjA4LDAgLTYuMTIsMC4wMWMtMTAuMTksMC4wMyAtMjAuMjgsLTAuMTkgLTMwLjQzLC0xLjEzYy0wLjgzLC0wLjA4IC0xLjY3LC0wLjE2IC0yLjUzLC0wLjI0Yy0yNi4xMiwtMi42OCAtNDkuMTksLTE0Ljc1IC02Ni4yLC0zNC44OGMtMjYuMSwtMzMuOTQgLTIzLjE3LC03OC4xNCAtMjMuMTMsLTExOC42NWMwLC0zLjk1IDAsLTcuOTEgMCwtMTEuODZjLTAuMDEsLTYuNjcgMCwtMTMuMzQgMCwtMjAuMDJjMC4wMSwtNi43MSAwLjAxLC0xMy40MSAwLC0yMC4xMmMtMC4wMiwtMzIuNCAtMC4wMiwtNjQuOCAwLjQsLTk3LjE5YzAuMDQsLTIuNTMgMC4wNiwtNS4wNiAwLjA5LC03LjU5YzAuMjcsLTI5LjA5IDMuOTUsLTU4LjgzIDI1Ljg0LC04MC44M2MwLjkzLC0wLjkxIDEuODUsLTEuODEgMi44LC0yLjc0YzEuMjgsLTEuMzEgMS4yOCwtMS4zMSAyLjU4LC0yLjY1YzEwLjgxLC0xMC41NCAyNC4wNCwtMTcuMDcgMzguNDIsLTIxLjM1YzAuOTQsLTAuMyAxLjg4LC0wLjU5IDIuODUsLTAuOWMyNC45LC02LjggNTMuMTEsLTQuNCA3OC42NiwtNC4zN3oiIGZpbGw9IiMwMDQxNkEiIGlkPSJvYmplY3QtMCIvPgogICA8cGF0aCBkPSJtMzgwLjIxLDM5My40NmMyMC41MiwxOC43MSAyMC41MiwxOC43MSAyNC43OSwyNy41NGMtMC4yNSwyLjg4IC0wLjU1LDQuNSAtMi41Miw2LjY2Yy0wLjY0LDAuNDkgLTEuMjksMC45NyAtMS45NiwxLjQ3Yy0wLjcyLDAuNTUgLTEuNDUsMS4xMSAtMi4yLDEuNjhjLTEuMTgsMC44NyAtMS4xOCwwLjg3IC0yLjM5LDEuNzVjLTAuOCwwLjYxIC0xLjYxLDEuMjIgLTIuNDMsMS44NGMtMS42NywxLjI2IC0zLjM1LDIuNTEgLTUuMDIsMy43NWMtMi4zNiwxLjc1IC00LjY5LDMuNTIgLTcuMDMsNS4yOWMtNy4wMSw1LjMxIC03LjAxLDUuMzEgLTkuNzcsNy4zM2MtMS42MiwxLjE4IC0zLjIzLDIuNDEgLTQuODMsMy42M2MtMi44NSwxLjYgLTIuODUsMS42IC01LjMyLDEuNzljLTMuOTQsLTEuODUgLTYuMjksLTQuOTMgLTkuMSwtOC4xOWMtMTQuMDIsLTEuNTU1IC0zMi4wNCwtMjYuNTkgLTUzLjM0LC0yOC4yMmMtMjQuODUsLTEuMjQgLTQ2LjEyLDQuNjIgLTY1LjA5LDIxLjIyYy0xNS42NywxNC43NSAtMjUuMzMsMzUuNTUgLTI2LjI5LDU3LjA2Yy0wLjY1LDI1LjE4IDYuMDQsNDguMDYgMjMuMjksNjYuOTRjMTMuMTEsMTMuNjkgMzIuMTEsMjIuOTYgNTEsMjVjNS45NiwwLjA3IDExLjkyLC0wLjE5IDE3Ljg4LC0wLjUyYzYsLTAuMTYgMTAuMDYsLTAuMjYgMTQuNywzLjgzYzEuMTYsMS4yMSAyLjMsMi40NCAzLjQyLDMuNjljMS40NCwxLjE1IDIuODksMi4yOCA0LjM3LDMuMzdjMC42NSwwLjQ5IDEuMjksMC45NyAxLjk2LDEuNDdjMy42NiwyLjU1IDcuMzIsMi43OSAxMS42NywyLjE2YzQuNTksLTIgNy45MSwtNC40NSAxMS41NiwtNy44NmMwLjUxLC0wLjQ4IDEuMDMsLTAuOTYgMS41NSwtMS40NWMzLjg5LC0zLjY2IDcuNjMsLTcuNDQgMTEuMzUsLTExLjI3YzAuNTMsLTAuNTUgMS4wNywtMS4xIDEuNjIsLTEuNjZjMi4xOCwtMi4yNSA0LjM2LC00LjQ5IDYuNTIsLTYuNzZjMS42LC0xLjY5IDMuMjMsLTMuMzUgNC44NiwtNS4wMmMwLjczLC0wLjc3IDAuNzMsLTAuNzcgMS40NiwtMS41NmMxLjQsLTEuNDEgMS40LC0xLjA4LTMuNDJjMy44MywwLjE1IDUuNzYsMS4yNyA4LjUsMy44N2MyLjU2LDIuMzggNS4xNCw0LjY4IDcuODcsNi44NmMwLjU4LDAuNDggMS4xNywwLjk2IDEuNzgsMS40NWMxLjE3LDAuOTUgMi4zNSwxLjg5IDMuNTQsMi44MmMyLjQ3LDIuMDIgNC4xNCwzLjU5IDUuMzMsNi41N2MtMC4wOSw4LjAyIC05Ljg3LDE2IC0xNS4wMiwyMS40M2MtMC44NCwwLjkgLTEuNjgsMS44IC0yLjU0LDIuNzNjLTIyLjg4LDIzLjg5IC01Ni4yNCwzNy42MSAtODkuMjMsMzguNDdjLTI3Ljk4LDAuMzUgLTUyLjY2LC00LjQgLTc3LjIzLC0xOC4yYy0xLjEyLC0wLjYzIC0yLjI0LC0xLjI1IC0zLjM5LC0xLjljLTMxLjgyLC0xOC43OSAtNTQuNTIsLTQ4LjUxIC02My45NywtODQuMjdjLTAuNTcsLTIuMjcgLTEuMTEsLTQuNTUgLTEuNjQsLTYuODNjLTAuMTcsLTAuNjkgLTAuMzQsLTEuMzcgLTAuNTEsLTIuMDhjLTUsLTIxLjYxIC0zLjc3LC00NS4yOSAwLjUxLC02Ni45MmMwLjE1LC0wLjc2IDAuMywtMS41MyAwLjQ1LC0yLjMxYzQuMjcsLTIwLjMxIDE0LjIxLC0zOC45MyAyNy41NSwtNTQuNjljMS4xNywtMS40MSAxLjE3LC0xLjQxIDIuMzcsLTIuODVjMjIuMjEsLTI1LjYyIDU1Ljk4LC00NC4xNCA5MC4wNywtNDYuOWMzOC45OCwtMi4zOCA3Ni40Nyw1LjM0IDEwNi43NywzMS4yMXoiIGZpbGw9IiNGREZDRjciIGlkPSJvYmplY3QtMSIvPgogICA8cGF0aCBkPSJtNDA1LjM2LDQ3OS4yOGM0LjMyLDEuMTggNi44Nyw0LjE1IDkuOTYsNy4yOWMwLjY0LDAuNiAxLjI5LDEuMjEgMS45NSwxLjg0YzMuMTksMy4xOSA0LjYyLDQuNzkgNS4yOSw5LjM2Yy0wLjcxLDQuMTYgLTIuNjUsNi4zOCAtNS41Niw5LjIzYy00LjE0LDQuMTMgLTguMjUsOC4yOSAtMTIuMzUsMTIuNDZjLTcuMzUsNy40NCAtMTQuNzEsMTQuODcgLTIyLjA4LDIyLjI5Yy00LjQ2LDQuNDkgLTguOTEsOC45OCAtMTMuMzQsMTMuNDhjLTQuMyw0LjM3IC04LjYxLDguNzIgLTEyLjk0LDEzLjA1Yy0xLjY0LDEuNjYgLTMuMjgsMy4zMiAtNC45MSw0Ljk5Yy0yLjI5LDIuMzIgLTQuNTgsNC42MyAtNi44OSw2LjkzYy0wLjY3LDAuNjkgLTEuMzQsMS4zOCAtMi4wMywyLjFjLTQuNjEsNC41NCAtNC42MSw0LjU0IC04LjY5LDUuMzJjLTMuMDgsLTAuNjkgLTQuMjcsLTEuMzggLTYuNDYsLTMuNjFjLTAuNjUsLTAuNjYgLTEuMzEsLTEuMzEgLTEuOTksLTEuOTljLTAuNjksLTAuNzEgLTEuMzgsLTEuNDMgLTIuMDksLTIuMTdjLTAuNzMsLTAuNzQgLTEuNDYsLTEuNDcgLTIuMjEsLTIuMjNjLTIuMzMsLTIuMzYgLTQuNjQsLTQuNzQgLTYuOTUsLTcuMTJjLTEuNTUsLTEuNTcgLTMuMSwtMy4xNCAtNC42NiwtNC43MWMtNi4xNCwtNi4yMyAtMTIuMjIsLTEyLjQ3IC0xNy45NCwtMTkuMWMtMS4xOSwtMS4zNyAtMi40MywtMi43MSAtMy42OCwtNC4wNGMtMC44NSwtMC45MSAtMC44NSwtMC45MSAtMS43MiwtMS44M2MtMC41OSwtMC42MiAtMS4xOCwtMS4yMyAtMS43OCwtMS44NmMtMS4yOSwtMS45NiAtMS4yOSwtMS45NiAtMS44OSwtNC4yNGMwLjk5LC00LjQzIDQuMDUsLTYuOTMgNy4yMywtMTAuMDNjMC42MiwtMC42NSAxLjIzLC0xLjI5IDEuODcsLTEuOTVjMi44NSwtMi44NCA0LjY4LC00LjU1IDguNjUsLTUuNDdjMy44MSwwLjk4IDUuMTQsMi44OSA3Ljg1LDUuNzNjMC45OSwwLjk5IDEuOTcsMS45NyAyLjk2LDIuOTZjNy42OCw3LjY4IDE1LjM2LDE1LjM2IDIzLjA0LDIzLjA0YzUuMDgsLTQuMjUgOS44NCwtOC42OCAxNC41LC0xMy4zN2MwLjk0LC0wLjkzIDAuOTQsLTAuOTMgMS45LC0xLjg5YzAuOTMsLTAuOTMgMC45MywtMC45MyAxLjg5LC0xLjg5YzAuNTQsLTAuNTQgMS4wOSwtMS4wOSAxLjY1LC0xLjY2YzEuODIsLTEuOTMgMy41NSwtMy45IDUuMjksLTUuOTFjMy44LC00LjM3IDcuODMsLTguNDYgMTEuOTQsLTEyLjU0YzAuNzUsLTAuNzUgMS41MSwtMS41MSAyLjI5LC0yLjI4YzIuMzksLTIuMzkgNC43OCwtNC43NyA3LjE3LC03LjE0YzEuNjEsLTEuNjEgMy4yMiwtMy4yMiA0Ljg0LC00LjgzYzcuMjMsLTcuMjIgNy4yMywtNy4yMiAxMC43OSwtMTAuNzRjMS4wOSwtMS4xIDIuMTgsLTIuMiAzLjI2LC0zLjMyYzMuMjUsLTMuMzUgMy4yNSwtMy4zNSA1Ljg0LC00LjE1eiIgZmlsbD0iIzREQkU2NiIgaWQ9Im9iamVjdC0yIi8+CiAgPC9nPgogPC9nPgo8L3N2Zz4=' alt="CRITCOM Logo" class="h-12">
+            <img src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQyOSIgaGVpZ2h0PSI0MjUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KCiA8ZyBjbGFzcz0ibGF5ZXIiIGRpc3BsYXk9ImlubGluZSI+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDxnIGlkPSJzdmdfMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjc1IC0yOTkuNTIpIHRyYW5zbGF0ZSgwIDI5OS41MikgdHJhbnNsYXRlKDQxLjc1IDApIHRyYW5zbGF0ZSgtNSAwKSB0cmFuc2xhdGUoMCAtMjk3LjMpIG1hdHJpeCgxIDAgMCAxIC02NS43NSAwKSI+CiAgIDxwYXRoIGQ9Im0yMjIuNTEsMjk3LjczYzUuNTEsMC4wMSAxMS4wMywwIDE2LjU0LDBjOS4yNiwtMC4wMSAxOC41MiwwIDI3Ljc4LDAuMDFjMTAuNiwwLjAxIDIxLjIxLDAuMDEgMzEuODIsLTAuMDFjOS4yLDAgMTguNCwtMC4wMSAyNy42LDBjNS40NSwwIDEwLjksMCAxNi4zNiwwYzE5LjkxLC0wLjAzIDM5LjhgMCA1OS42OCwxLjE4YzAuNywwLjA0IDEuMzksMC4wOCAyLjEsMC4xMmMyOC4zNywxLjcgNTIuMTQsMTAuOTcgNzEuNzMsMzIuMjdjMjAuMTcsMjMuOTYgMjMuMDQsNTEuODEgMjMuMDMsODEuOTVjMCwyLjE0IDAsNC4yOCAwLjAxLDYuNDJjMC4wMSw1Ljc4IDAuMDEsMTEuNTYgMC4wMSwxNy4zNWMwLDMuNjIgMCw3LjI1IDAsMTAuODhjMC4wMSwxMi42OCAwLjAyLDI1LjM3IDAuMDIsMzguMDVjMCwxMS43NyAwLjAxLDIzLjUzIDAuMDIsMzUuMjljMC4wMiwxMC4xNSAwLjAyLDIwLjI5IDAuMDIsMzAuNDRjMCw2LjA0IDAsMTIuMDggMC4wMSwxOC4xMWMwLjAxLDUuNyAwLjAxLDExLjM5IDAuMDEsMTcuMDljMCwyLjA2IDAsNC4xMyAwLDYuMmMwLjExLDM3Ljk4IC0yLjU4LDczLjk1IC0zMC41NywxMDIuMjdjLTE0LjA4LDEzLjA5IC0zMi4wOSwyMS4yNiAtNTAuOTMsMjQuMzRjLTAuNzIsMC4xMiAtMS40NSwwLjI0IC0yLjIsMC4zNmMtMTQuOSwyLjIzIC0zMC4wMSwyLjEgLTQ1LjA0LDIuMDljLTIuMTIsMC4wMSAtNC4yNCwwLjAxIC02LjM1LDAuMDFjLTUuNywwLjAxIC0xMS40MSwwLjAyIC0xNy4xMSwwLjAyYy0zLjU3LDAgLTcuMTUsMCAtMTAuNzIsMGMtMTIuNTEsMC4wMSAtMjUuMDIsMC4wMSAtMzcuNTIsMC4wMWMtMTEuNiwwIC0yMy4yMSwwLjAxIC0zNC44MSwwLjAzYy0xMC4wMSwwLjAxIC0yMC4wMiwwLjAyIC0zMC4wMiwwLjAyYy01Ljk2LDAgLTExLjkyLDAgLTE3Ljg3LDAuMDFjLTUuNjEsMC4wMSAtMTEuMjIsMC4wMSAtMTYuODMsMGMtMi4wNCwwIC00LjA4LDAgLTYuMTIsMC4wMWMtMTAuMTksMC4wMyAtMjAuMjgsLTAuMTkgLTMwLjQzLC0xLjEzYy0wLjgzLC0wLjA4IC0xLjY3LC0wLjE2IC0yLjUzLC0wLjI0Yy0yNi4xMiwtMi42OCAtNDkuMTksLTE0Ljc1IC02Ni4yLC0zNC44OGMtMjYuMSwtMzMuOTQgLTIzLjE3LC03OC4xNCAtMjMuMTMsLTExOC42NWMwLC0zLjk1IDAsLTcuOTEgMCwtMTEuODZjLTAuMDEsLTYuNjcgMCwtMTMuMzQgMCwtMjAuMDJjMC4wMSwtNi43MSAwLjAxLC0xMy40MSAwLC0yMC4xMmMtMC4wMiwtMzIuNCAtMC4wMiwtNjQuOCAwLjQsLTk3LjE5YzAuMDQsLTIuNTMgMC4wNiwtNS4wNiAwLjA5LC03LjU5YzAuMjcsLTI5LjA5IDMuOTUsLTU4LjgzIDI1Ljg0LC04MC44M2MwLjkzLC0wLjkxIDEuODUsLTEuODEgMi44LC0yLjc0YzEuMjgsLTEuMzEgMS4yOCwtMS4zMSAyLjU4LC0yLjY1YzEwLjgxLC0xMC41NCAyNC4wNCwtMTcuMDcgMzguNDIsLTIxLjM1YzAuOTQsLTAuMyAxLjg4LC0wLjU5IDIuODUsLTAuOWMyNC45LC02LjggNTMuMTEsLTQuNCA3OC42NiwtNC4zN3oiIGZpbGw9IiMwMDQxNkEiIGlkPSJvYmplY3QtMCIvPgogICA8cGF0aCBkPSJtMzgwLjIxLDM5My40NmMyMC41MiwxOC43MSAyMC41MiwxOC43MSAyNC43OSwyNy41NGMtMC4yNSwyLjg4IC0wLjU1LDQuNSAtMi41Miw2LjY2Yy0wLjY0LDAuNDkgLTEuMjksMC45NyAtMS45NiwxLjQ3Yy0wLjcyLDAuNTUgLTEuNDUsMS4xMSAtMi4yLDEuNjhjLTEuMTgsMC44NyAtMS4xOCwwLjg3IC0yLjM5LDEuNzVjLTAuOCwwLjYxIC0xLjYxLDEuMjIgLTIuNDMsMS44NGMtMS42NywxLjI2IC0zLjM1LDIuNTEgLTUuMDIsMy43NWMtMi4zNiwxLjc1IC00LjY5LDMuNTIgLTcuMDMsNS4yOWMtNy4wMSw1LjMxIC03LjAxLDUuMzEgLTkuNzcsNy4zM2MtMS42MiwxLjE4IC0zLjIzLDIuNDEgLTQuODMsMy42M2MtMi44NSwxLjYgLTIuODUsMS42IC01LjMyLDEuNzljLTMuOTQsLTEuODUgLTYuMjksLTQuOTMgLTkuMSwtOC4xOWMtMTQuMDIsLTEuNTU1IC0zMi4wNCwtMjYuNTkgLTUzLjM0LC0yOC4yMmMtMjQuODUsLTEuMjQgLTQ2LjEyLDQuNjIgLTY1LjA5LDIxLjIyYy0xNS42NywxNC43NSAtMjUuMzMsMzUuNTUgLTI2LjI5LDU3LjA2Yy0wLjY1LDI1LjE4IDYuMDQsNDguMDYgMjMuMjksNjYuOTRjMTMuMTEsMTMuNjkgMzIuMTEsMjIuOTYgNTEsMjVjNS45NiwwLjA3IDExLjkyLC0wLjE5IDE3Ljg4LC0wLjUyYzYsLTAuMTYgMTAuMDYsLTAuMjYgMTQuNywzLjgzYzEuMTYsMS4yMSAyLjMsMi40NCAzLjQyLDMuNjljMS40NCwxLjE1IDIuODksMi4yOCA0LjM3LDMuMzdjMC42NSwwLjQ5IDEuMjksMC45NyAxLjk2LDEuNDdjMy42NiwyLjU1IDcuMzIsMi43OSAxMS42NywyLjE2YzQuNTksLTIgNy45MSwtNC40NSAxMS41NiwtNy44NmMwLjUxLC0wLjQ4IDEuMDMsLTAuOTYgMS41NSwtMS40NWMzLjg5LC0zLjY2IDcuNjMsLTcuNDQgMTEuMzUsLTExLjI3YzAuNTMsLTAuNTUgMS4wNywtMS4xIDEuNjIsLTEuNjZjMi4xOCwtMi4yNSA0LjM2LC00LjQ5IDYuNTIsLTYuNzZjMS42LC0xLjY5IDMuMjMsLTMuMzUgNC44NiwtNS4wMmMwLjczLC0wLjc3IDAuNzMsLTAuNzcgMS40NiwtMS41NmMxLjQsLTEuNDEgMS40LC0xLjA4LTMuNDJjMy44MywwLjE1IDUuNzYsMS4yNyA4LjUsMy44N2MyLjU2LDIuMzggNS4xNCw0LjY4IDcuODcsNi44NmMwLjU4LDAuNDggMS4xNywwLjk2IDEuNzgsMS40NWMxLjE3LDAuOTUgMi4zNSwxLjg5IDMuNTQsMi44MmMyLjQ3LDIuMDIgNC4xNCwzLjU5IDUuMzMsNi41N2MtMC4wOSw4LjAyIC05Ljg3LDE2IC0xNS4wMiwyMS40M2MtMC44NCwwLjkgLTEuNjgsMS44IC0yLjU0LDIuNzNjLTIyLjg4LDIzLjg5IC01Ni4yNCwzNy42MSAtODkuMjMsMzguNDdjLTI3Ljk4LDAuMzUgLTUyLjY2LC00LjQgLTc3LjIzLC0xOC4yYy0xLjEyLC0wLjYzIC0yLjI0LC0xLjI1IC0zLjM5LC0xLjljLTMxLjgyLC0xOC43OSAtNTQuNTIsLTQ4LjUxIC02My45NywtODQuMjdjLTAuNTcsLTIuMjcgLTEuMTEsLTQuNTUgLTEuNjQsLTYuODNjLTAuMTcsLTAuNjkgLTAuMzQsLTEuMzcgLTAuNTEsLTIuMDhjLTUsLTIxLjYxIC0zLjc3LC00NS4yOSAwLjUxLC02Ni45MmMwLjE1LC0wLjc2IDAuMywtMS41MyAwLjQ1LC0yLjMxYzQuMjcsLTIwLjMxIDE0LjIxLC0zOC45MyAyNy41NSwtNTQuNjljMS4xNywtMS40MSAxLjE3LC0xLjQxIDIuMzcsLTIuODVjMjIuMjEsLTI1LjYyIDU1Ljk4LC00NC4xNCA5MC4wNywtNDYuOWMzOC45OCwtMi4zOCA3Ni40Nyw1LjM0IDEwNi43NywzMS4yMXoiIGZpbGw9IiNGREZDRjciIGlkPSJvYmplY3QtMSIvPgogICA8cGF0aCBkPSJtNDA1LjM2LDQ3OS4yOGM0LjMyLDEuMTggNi44Nyw0LjE1IDkuOTYsNy4yOWMwLjY0LDAuNiAxLjI5LDEuMjEgMS45NSwxLjg0YzMuMTksMy4xOSA0LjYyLDQuNzkgNS4yOSw5LjM2Yy0wLjcxLDQuMTYgLTIuNjUsNi4zOCAtNS41Niw5LjIzYy00LjE0LDQuMTMgLTguMjUsOC4yOSAtMTIuMzUsMTIuNDZjLTcuMzUsNy40NCAtMTQuNzEsMTQuODcgLTIyLjA4LDIyLjI5Yy00LjQ2LDQuNDkgLTguOTEsOC45OCAtMTMuMzQsMTMuNDhjLTQuMyw0LjM3IC04LjYxLDguNzIgLTEyLjk0LDEzLjA1Yy0xLjY0LDEuNjYgLTMuMjgsMy4zMiAtNC45MSw0Ljk5Yy0yLjI5LDIuMzIgLTQuNTgsNC42MyAtNi44OSw2LjkzYy0wLjY3LDAuNjkgLTEuMzQsMS4zOCAtMi4wMywyLjFjLTQuNjEsNC41NCAtNC42MSw0LjU0IC04LjE5LDUuMzJjLTMuMDgsLTAuNjkgLTQuMjcsLTEuMzggLTYuNDYsLTMuNjFjLTAuNjUsLTAuNjYgLTEuMzEsLTEuMzEgLTEuOTksLTEuOTljLTAuNjksLTAuNzEgLTEuMzgsLTEuNDMgLTIuMDksLTIuMTdjLTAuNzMsLTAuNzQgLTEuNDYsLTEuNDcgLTIuMjEsLTIuMjNjLTIuMzMsLTIuMzYgLTQuNjQsLTQuNzQgLTYuOTUsLTcuMTJjLTEuNTUsLTEuNTcgLTMuMSwtMy4xNCAtNC42NiwtNC43MWMtNi4xNCwtNi4yMyAtMTIuMjIsLTEyLjQ3IC0xNy45NCwtMTkuMWMtMS4xOSwtMS4zNyAtMi40MywtMi43MSAtMy42OCwtNC4wNGMtMC44NSwtMC45MSAtMC44NSwtMC45MSAtMS43MiwtMS44M2MtMC41OSwtMC42MiAtMS4xOCwtMS4yMyAtMS43OCwtMS44NmMtMS4yOSwtMS45NiAtMS4yOSwtMS45NiAtMS44OSwtNC4yNGMwLjk5LC00LjQzIDQuMDUsLTYuOTMgNy4yMywtMTAuMDNjMC42MiwtMC42NSAxLjIzLC0xLjI5IDEuODcsLTEuOTVjMi44NSwtMi44NCA0LjY4LC00LjU1IDguNjUsLTUuNDdjMy44MSwwLjk4IDUuMTQsMi44OSA3Ljg1LDUuNzNjMC45OSwwLjk5IDEuOTcsMS45NyAyLjk2LDIuOTZjNy42OCw3LjY4IDE1LjM2LDE1LjM2IDIzLjA0LDIzLjA0YzUuMDgsLTQuMjUgOS44NCwtOC42OCAxNC41LC0xMy4zN2MwLjk0LC0wLjkzIDAuOTQsLTAuOTMgMS45LC0xLjg5YzAuOTMsLTAuOTMgMC45MywtMC45MyAxLjg5LC0xLjg5YzAuNTQsLTAuNTQgMS4wOSwtMS4wOSAxLjY1LC0xLjY2YzEuODIsLTEuOTMgMy41NSwtMy45IDUuMjksLTUuOTFjMy44LC00LjM3IDcuODMsLTguNDYgMTEuOTQsLTEyLjU0YzAuNzUsLTAuNzUgMS41MSwtMS41MSAyLjI5LC0yLjI4YzIuMzksLTIuMzkgNC43OCwtNC43NyA3LjE3LC03LjE0YzEuNjEsLTEuNjEgMy4yMiwtMy4yMiA0Ljg0LC00LjgzYzcuMjMsLTcuMjIgNy4yMywtNy4yMiAxMC43OSwtMTAuNzRjMS4wOSwtMS4xIDIuMTgsLTIuMiAzLjI2LC0zLjMyYzMuMjUsLTMuMzUgMy4yNSwtMy4zNSA1Ljg0LC00LjE1eiIgZmlsbD0iIzREQkU2NiIgaWQ9Im9iamVjdC0yIi8+CiAgPC9nPgogPC9nPgo8L3N2Zz4=' alt="CRITCOM Logo" class="h-12">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">CRITCOM</h1>
         </header>
 
@@ -1295,80 +1296,100 @@
             reader.readAsText(file, 'latin-1'); // Usa latin-1 para compatibilidade com arquivos ABNT
         }
 
-        // --- FUNÇÕES DE RENDERIZAÇÃO E UI ---
+        // --- FUNÇÕES DE RENDERIZAÇÃO E UI (MODIFICADO PARA APEXCHARTS) ---
 
         let activeCharts = []; // Para destruir gráficos antigos
         
         // Opções de gráfico compartilhadas
         const defaultChartOptions = {
-            responsive: true,
-            scales: {
-                x: {
-                    type: 'timeseries',
-                    grid: { display: false },
-                    time: { 
-                        unit: 'day',
-                        tooltipFormat: 'dd/MM/yyyy HH:mm',
-                        displayFormats: { day: 'dd/MM' }
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(new Date(value));
-                        }
-                    }
-                },
-                y: {
-                   grid: { display: false }
+            chart: {
+                type: 'line',
+                height: 320,
+                zoom: { enabled: true },
+                toolbar: { show: true }
+            },
+            stroke: {
+                width: 2,
+                curve: 'smooth'
+            },
+            xaxis: {
+                type: 'datetime',
+                labels: {
+                    datetimeUTC: false,
+                    format: 'dd/MM'
                 }
+            },
+            yaxis: {
+                labels: {
+                    formatter: (val) => { 
+                        if (val === null || val === undefined) return val;
+                        return val.toFixed(3); 
+                    }
+                }
+            },
+            tooltip: {
+                x: {
+                    format: 'dd/MM/yyyy HH:mm'
+                }
+            },
+            dataLabels: {
+                enabled: false
             }
         };
 
         const fpChartOptions = {
-            ...defaultChartOptions,
-            scales: {
-                ...defaultChartOptions.scales,
-                y: {
-                    min: 0, max: 2,
-                    grid: { display: false },
-                    ticks: {
-                        stepSize: 0.2,
-                        callback: function(value) {
-                            const val = parseFloat(value.toFixed(1));
-                            if (val === 1) return '1,0 Unit.';
-                            if (val < 1) return `${formatBR(val, 1)} Ind`;
-                            if (val > 1) return `${formatBR(2 - val, 1)} Cap`;
-                            return '';
+             ...defaultChartOptions, // Start with default options
+             annotations: {
+                yaxis: [
+                    {
+                        y: 0.92,
+                        borderColor: '#FF4560',
+                        strokeDashArray: 4,
+                        label: {
+                            borderColor: '#FF4560',
+                            style: { color: '#fff', background: '#FF4560' },
+                            text: '0,92 Indutivo',
+                            position: 'left',
+                            offsetX: 5,
                         }
+                    },
+                    {
+                        y: 1.08, // 1 + (1 - 0.92)
+                        borderColor: '#008FFB',
+                        strokeDashArray: 4,
+                        label: {
+                            borderColor: '#008FFB',
+                            style: { color: '#fff', background: '#008FFB' },
+                            text: '0,92 Capacitivo',
+                            position: 'left',
+                            offsetX: 5,
+                        }
+                    }
+                ]
+            },
+            yaxis: {
+                min: 0,
+                max: 2,
+                tickAmount: 10,
+                labels: {
+                    formatter: function(value) {
+                        const val = parseFloat(value.toFixed(1));
+                        if (val === 1) return '1,0 Unit.';
+                        if (val < 1) return `${formatBR(val, 1)} Ind`;
+                        if (val > 1) return `${formatBR(2 - val, 1)} Cap`;
+                        return '';
                     }
                 }
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) { label += ': '; }
-                            const yValue = context.parsed.y;
-                            if (yValue <= 1) {
-                                label += `${formatBR(yValue, 4)} Indutivo`;
-                            } else {
-                                label += `${formatBR(2 - yValue, 4)} Capacitivo`;
-                            }
-                            return label;
-                        }
-                    }
-                },
-                annotation: {
-                    annotations: {
-                        indutivoLine: {
-                            type: 'line', yMin: 0.92, yMax: 0.92,
-                            borderColor: 'rgb(255, 99, 132)', borderWidth: 2, borderDash: [6, 6],
-                            label: { content: '0,92 Indutivo', enabled: true, position: 'start', backgroundColor: 'rgba(255, 99, 132, 0.7)' }
-                        },
-                        capacitivoLine: {
-                            type: 'line', yMin: 1.08, yMax: 1.08, // 1 + (1 - 0.92)
-                            borderColor: 'rgb(54, 162, 235)', borderWidth: 2, borderDash: [6, 6],
-                            label: { content: '0,92 Capacitivo', enabled: true, position: 'start', backgroundColor: 'rgba(54, 162, 235, 0.7)' }
+            tooltip: {
+                ...defaultChartOptions.tooltip,
+                y: {
+                    formatter: function(yValue) {
+                        if (yValue === undefined || yValue === null) return '';
+                        if (yValue <= 1) {
+                            return `${formatBR(yValue, 4)} Indutivo`;
+                        } else {
+                            return `${formatBR(2 - yValue, 4)} Capacitivo`;
                         }
                     }
                 }
@@ -1447,10 +1468,10 @@
             modalContent.innerHTML = tableHTML + chartContainersHTML;
             
             const chartDefinitions = [
-                { id: 'consumo_antigo', title: 'Consumo (Medidor Anterior)', datasets: [ createChartData(dataframes.df_con_antigo, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con_antigo, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
-                { id: 'demanda_antigo', title: 'Demanda (Medidor Anterior)', datasets: [ createChartData(dataframes.df_dem_antigo, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem_antigo, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem_antigo, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem_antigo, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]},
-                { id: 'consumo_novo', title: 'Consumo (Medidor Novo)', datasets: [ createChartData(dataframes.df_con_novo, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con_novo, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
-                { id: 'demanda_novo', title: 'Demanda (Medidor Novo)', datasets: [ createChartData(dataframes.df_dem_novo, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem_novo, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem_novo, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem_novo, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]}
+                { id: 'consumo_antigo', title: 'Consumo (Medidor Anterior)', datasets: [ createChartData(dataframes.df_con_antigo, 'kWh fornecido', 'kWh fornecido'), createChartData(dataframes.df_con_antigo, 'kWh recebido', 'kWh recebido') ]},
+                { id: 'demanda_antigo', title: 'Demanda (Medidor Anterior)', datasets: [ createChartData(dataframes.df_dem_antigo, 'kW fornecido', 'kW fornecido'), createChartData(dataframes.df_dem_antigo, 'kW recebido', 'kW recebido'), createChartData(dataframes.df_dem_antigo, 'DMCR', 'DMCR'), createChartData(dataframes.df_dem_antigo, 'UFER', 'UFER') ]},
+                { id: 'consumo_novo', title: 'Consumo (Medidor Novo)', datasets: [ createChartData(dataframes.df_con_novo, 'kWh fornecido', 'kWh fornecido'), createChartData(dataframes.df_con_novo, 'kWh recebido', 'kWh recebido') ]},
+                { id: 'demanda_novo', title: 'Demanda (Medidor Novo)', datasets: [ createChartData(dataframes.df_dem_novo, 'kW fornecido', 'kW fornecido'), createChartData(dataframes.df_dem_novo, 'kW recebido', 'kW recebido'), createChartData(dataframes.df_dem_novo, 'DMCR', 'DMCR'), createChartData(dataframes.df_dem_novo, 'UFER', 'UFER') ]}
             ];
             renderCharts(chartDefinitions, dataframes);
         }
@@ -1502,8 +1523,8 @@
             modalContent.innerHTML = tableHTML + chartContainersHTML;
 
             const chartDefinitions = [
-                { id: 'consumo_unico', title: 'Consumo', datasets: [ createChartData(dataframes.df_con, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)'), createChartData(dataframes.df_con, 'kWh recebido', 'kWh recebido', 'rgb(255, 99, 132)') ]},
-                { id: 'demanda_unico', title: 'Demanda', datasets: [ createChartData(dataframes.df_dem, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)'), createChartData(dataframes.df_dem, 'kW recebido', 'kW recebido', 'rgb(255, 159, 64)'), createChartData(dataframes.df_dem, 'DMCR', 'DMCR', 'rgb(153, 102, 255)'), createChartData(dataframes.df_dem, 'UFER', 'UFER', 'rgb(75, 192, 75)') ]}
+                { id: 'consumo_unico', title: 'Consumo', datasets: [ createChartData(dataframes.df_con, 'kWh fornecido', 'kWh fornecido'), createChartData(dataframes.df_con, 'kWh recebido', 'kWh recebido') ]},
+                { id: 'demanda_unico', title: 'Demanda', datasets: [ createChartData(dataframes.df_dem, 'kW fornecido', 'kW fornecido'), createChartData(dataframes.df_dem, 'kW recebido', 'kW recebido'), createChartData(dataframes.df_dem, 'DMCR', 'DMCR'), createChartData(dataframes.df_dem, 'UFER', 'UFER') ]}
             ];
             renderCharts(chartDefinitions, dataframes);
         }
@@ -1531,7 +1552,7 @@
                     'kWh fornecido': c1 * k_medidor,
                     'kVArh indutivo': c2 * k_medidor,
                     'kVArh capacitivo': c3 * k_medidor,
-                    'kW fornecido': c1 * k_medidor * 12,
+                    'kW fornecido': c1 * k_medidor * 4,
                     fatorPotencia: row['Fator de Potência']
                 };
             });
@@ -1595,22 +1616,18 @@
             }
         }
         
-        function createChartData(df, yKey, label, color) {
+        function createChartData(df, yKey, label) {
             if (!df || !yKey || !df.some(d => d[yKey] !== undefined)) return null;
             return {
-                label,
-                data: df.map(item => ({ x: item.DataHora.getTime(), y: item[yKey] })),
-                borderColor: color,
-                tension: 0.1,
-                pointRadius: 0,
-                borderWidth: 2
+                name: label,
+                data: df.map(item => [item.DataHora.getTime(), item[yKey]])
             };
         }
 
-        function createFatorPotenciaChartData(df, label, color) {
+        function createFatorPotenciaChartData(df, label) {
             if (!df || !df.some(d => d.fatorPotencia)) return null;
             return {
-                label,
+                name: label,
                 data: df.filter(d => d.fatorPotencia).map(item => {
                     const fp = item.fatorPotencia;
                     let yValue;
@@ -1619,12 +1636,8 @@
                     } else { // indutivo
                         yValue = fp.value;
                     }
-                    return { x: item.DataHora.getTime(), y: yValue };
-                }),
-                borderColor: color,
-                tension: 0.1,
-                pointRadius: 0,
-                borderWidth: 2
+                    return [item.DataHora.getTime(), yValue];
+                })
             };
         }
 
@@ -1634,28 +1647,48 @@
             
             // Adiciona gráficos de FP se houver dados
             if (dataframes.df_con_antigo || dataframes.df_dem_antigo) {
-                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_antigo, 'FP Medidor Antigo', 'purple');
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_antigo, 'FP Medidor Antigo');
                  if(pfDataset) chartDefinitions.push({ id: 'fp_antigo', title: 'Fator de Potência (Medidor Antigo)', datasets: [pfDataset], options: fpChartOptions });
             }
              if (dataframes.df_con_novo || dataframes.df_dem_novo) {
-                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_novo, 'FP Medidor Novo', 'orange');
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con_novo, 'FP Medidor Novo');
                  if(pfDataset) chartDefinitions.push({ id: 'fp_novo', title: 'Fator de Potência (Medidor Novo)', datasets: [pfDataset], options: fpChartOptions });
             }
             if (dataframes.df_con || dataframes.df_dem) {
-                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con, 'Fator de Potência', 'purple');
+                 const pfDataset = createFatorPotenciaChartData(dataframes.df_con, 'Fator de Potência');
                  if(pfDataset) chartDefinitions.push({ id: 'fp_unico', title: 'Fator de Potência', datasets: [pfDataset], options: fpChartOptions });
             }
 
-
             chartDefinitions.forEach(def => {
-                const validDatasets = def.datasets.filter(ds => ds !== null);
-                if (validDatasets.length > 0) {
+                const validSeries = def.datasets.filter(ds => ds !== null);
+                if (validSeries.length > 0) {
                     const chartWrapper = document.createElement('div');
-                    chartWrapper.innerHTML = `<div id="capture-${def.id}" class="p-4 bg-white border rounded-lg"><h3 class="text-center font-semibold mb-2">${def.title}</h3><canvas id="canvas-${def.id}"></canvas></div><div class="text-right my-2"><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button></div>`;
+                    // Changed from canvas to div for ApexCharts
+                    chartWrapper.innerHTML = `
+                        <div id="capture-${def.id}" class="p-4 bg-white border rounded-lg">
+                            <h3 class="text-center font-semibold mb-2">${def.title}</h3>
+                            <div class="relative h-80 w-full">
+                                <div id="chart-${def.id}"></div>
+                            </div>
+                        </div>
+                        <div class="text-right my-2">
+                           <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button>
+                        </div>
+                    `;
                     chartsContainer.appendChild(chartWrapper);
-                    const ctx = document.getElementById(`canvas-${def.id}`).getContext('2d');
-                    const newChart = new Chart(ctx, { type: 'line', data: { datasets: validDatasets }, options: def.options || defaultChartOptions });
-                    activeCharts.push(newChart);
+                    
+                    const options = {
+                        ...JSON.parse(JSON.stringify(def.options || defaultChartOptions)), // Deep copy to avoid mutation
+                        series: validSeries,
+                        chart: {
+                            ...(def.options?.chart || defaultChartOptions.chart),
+                            id: `chart-${def.id}` // assign a unique ID
+                        }
+                    };
+
+                    const chart = new ApexCharts(document.getElementById(`chart-${def.id}`), options);
+                    chart.render();
+                    activeCharts.push(chart);
                 }
             });
         }
@@ -1664,35 +1697,55 @@
             const chartsContainer = document.getElementById('charts-container-abnt');
             if (!chartsContainer) return;
 
-            const createPublicChartData = (df, yKey, label, color) => {
+            const createPublicChartData = (df, yKey, label) => {
                 if (!df || !yKey || !df.some(d => d[yKey] !== undefined)) return null;
-                return { label, data: df.map(item => ({ x: item.Timestamp.getTime(), y: item[yKey] })), borderColor: color, tension: 0.1, pointRadius: 0, borderWidth: 2 };
+                return { name: label, data: df.map(item => [item.Timestamp.getTime(), item[yKey]]) };
             };
             
-            const createPublicFpChartData = (df, label, color) => {
+            const createPublicFpChartData = (df, label) => {
                 if (!df || !df.some(d => d.fatorPotencia)) return null;
-                return { label, data: df.filter(d => d.fatorPotencia).map(item => {
+                return { name: label, data: df.filter(d => d.fatorPotencia).map(item => {
                     const fp = item.fatorPotencia;
                     let yValue = (fp.type === 'capacitivo') ? 1 + (1 - fp.value) : fp.value;
-                    return { x: item.Timestamp.getTime(), y: yValue };
-                }), borderColor: color, tension: 0.1, pointRadius: 0, borderWidth: 2 };
+                    return [item.Timestamp.getTime(), yValue];
+                }) };
             };
 
             const chartDefinitions = [
-                { id: 'consumo_publico', title: 'Consumo (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kWh fornecido', 'kWh fornecido', 'rgb(75, 192, 192)') ] },
-                { id: 'demanda_publico', title: 'Demanda (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kW fornecido', 'kW fornecido', 'rgb(54, 162, 235)') ] },
-                { id: 'fp_publico', title: 'Fator de Potência (Arquivo Público)', datasets: [ createPublicFpChartData(df_processed, 'Fator de Potência', 'purple') ], options: fpChartOptions }
+                { id: 'consumo_publico', title: 'Consumo (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kWh fornecido', 'kWh fornecido') ] },
+                { id: 'demanda_publico', title: 'Demanda (Arquivo Público)', datasets: [ createPublicChartData(df_processed, 'kW fornecido', 'kW fornecido') ] },
+                { id: 'fp_publico', title: 'Fator de Potência (Arquivo Público)', datasets: [ createPublicFpChartData(df_processed, 'Fator de Potência') ], options: fpChartOptions }
             ];
             
             chartDefinitions.forEach(def => {
-                const validDatasets = def.datasets.filter(ds => ds !== null);
-                if (validDatasets.length > 0) {
+                const validSeries = def.datasets.filter(ds => ds !== null);
+                if (validSeries.length > 0) {
                     const chartWrapper = document.createElement('div');
-                    chartWrapper.innerHTML = `<div id="capture-${def.id}" class="p-4 bg-white border rounded-lg"><h3 class="text-center font-semibold mb-2">${def.title}</h3><canvas id="canvas-${def.id}"></canvas></div><div class="text-right my-2"><button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button></div>`;
+                    chartWrapper.innerHTML = `
+                        <div id="capture-${def.id}" class="p-4 bg-white border rounded-lg">
+                            <h3 class="text-center font-semibold mb-2">${def.title}</h3>
+                            <div class="relative h-80 w-full">
+                                <div id="chart-${def.id}"></div>
+                            </div>
+                        </div>
+                        <div class="text-right my-2">
+                            <button class="copy-button px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="copyElementAsImage('capture-${def.id}', this)">Copiar Gráfico</button>
+                        </div>
+                    `;
                     chartsContainer.appendChild(chartWrapper);
-                    const ctx = document.getElementById(`canvas-${def.id}`).getContext('2d');
-                    const newChart = new Chart(ctx, { type: 'line', data: { datasets: validDatasets }, options: def.options || defaultChartOptions });
-                    activeCharts.push(newChart);
+                    
+                    const options = {
+                         ...JSON.parse(JSON.stringify(def.options || defaultChartOptions)), // Deep copy
+                        series: validSeries,
+                         chart: {
+                            ...(def.options?.chart || defaultChartOptions.chart),
+                            id: `chart-${def.id}`
+                        }
+                    };
+
+                    const chart = new ApexCharts(document.getElementById(`chart-${def.id}`), options);
+                    chart.render();
+                    activeCharts.push(chart);
                 }
             });
         }
@@ -1764,11 +1817,29 @@
         button.innerText = 'Copiando...';
         button.disabled = true;
 
+        const scaleFactor = 2; // Renderiza com o dobro da resolução para mais nitidez
+        const targetWidth = 1200; // Largura final da imagem em pixels
+
         html2canvas(element, { 
-            scale: 2,
-            backgroundColor: '#ffffff'
-        }).then(canvas => {
-            canvas.toBlob(blob => {
+            backgroundColor: '#ffffff',
+            scale: scaleFactor
+        }).then(sourceCanvas => {
+            // O sourceCanvas é grande (ex: 2400px de largura)
+            // Agora vamos redimensioná-lo para o tamanho final desejado, o que melhora a qualidade (downsampling)
+            const targetCanvas = document.createElement('canvas');
+            
+            const aspectRatio = sourceCanvas.height / sourceCanvas.width;
+            const targetHeight = targetWidth * aspectRatio;
+
+            targetCanvas.width = targetWidth;
+            targetCanvas.height = targetHeight;
+
+            const ctx = targetCanvas.getContext('2d');
+
+            // Desenha a imagem grande no canvas pequeno, o que resulta em uma imagem nítida
+            ctx.drawImage(sourceCanvas, 0, 0, targetWidth, targetHeight);
+
+            targetCanvas.toBlob(blob => {
                 navigator.clipboard.write([
                     new ClipboardItem({ 'image/png': blob })
                 ]).then(() => {
@@ -1836,3 +1907,5 @@
     </script>
 </body>
 </html>
+
+
