@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
-from selenium.webdriver.chrome.options import Options
 from datetime import datetime, timedelta
+import os
 
 # --- Configurações da Página do Streamlit ---
 st.set_page_config(page_title="Automação Hemera", layout="wide")
-st.title("🤖 Automação de Aprovação por Gestão no Hemera")
+st.title("Automação de Aprovação por Gestão no Hemera")
 st.markdown("---")
-
 
 # --- Funções da Automação (do código original) ---
 # Adicionei os parâmetros 'usuario' e 'senha' na função de login
@@ -52,7 +53,10 @@ def integracao(driver, Tesp=60):
     inputInte.click()
     sleep(2)
 
-    inputGestão = driver.find_element(By.XPATH, "/html/body/form/ul/li[3]/ul/li[2]/a")
+    if cliente == "Grupo B":
+        inputGestão = driver.find_element(By.XPATH, "/html/body/form/ul/li[3]/ul/li[2]/a")
+    else:
+        inputGestão = driver.find_element(By.XPATH, "/html/body/form/ul/li[3]/ul/li[3]/a")
     inputGestão.click()
     sleep(2)
 
@@ -72,7 +76,10 @@ def automacao(driver, UC, Tesp=60):
     inputPes.click()
     sleep(2)
 
-    inputges = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr[1]/td[1]/div/div/a")
+    if cliente == "Grupo B":
+        inputges = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr[1]/td[1]/div/div/a")
+    else:
+        inputges = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr/td[2]/div/div/a/img")
     inputges.click()
     sleep(2)
 
@@ -82,9 +89,11 @@ def automacao(driver, UC, Tesp=60):
     botao_OK.click()
     sleep(2)
 
-
 # --- Interface do Usuário ---
-st.header("1. Parâmetros de Entrada")
+st.header("1. Tipo de cliente")
+cliente = st.radio("Selecione o tipo de cliente:", ("Grupo B", "Cliente livre"), index=0, horizontal=True)
+
+st.header("2. Parâmetros de Entrada")
 
 col1, col2 = st.columns(2)
 
@@ -95,20 +104,18 @@ with col1:
     ]
     controlador = st.selectbox("Selecione o Controlador:", controladores_options)
     
-    inputUsuario = st.text_input("Usuário Hemera:")
+    if cliente == "Grupo B":
+        lote = st.number_input("Insira o número do Lote:", min_value=1, step=1)
 
 with col2:
-    lote = st.number_input("Insira o número do Lote:", min_value=1, step=1, value=8)
-    
-    inputSenha = st.text_input("Senha Hemera:", type="password")
+    inputUsuario = st.text_input("Usuário do Hemera:")
+    inputSenha = st.text_input("Senha do Hemera:", type="password")
 
-st.header("2. Unidades Consumidoras")
+st.header("3. Unidades Consumidoras")
 ucs_input = st.text_area(
     "Cole aqui as UCs que deseja processar (uma por linha):",
-    height=250,
-    placeholder="Exemplo:\n6464\n1234567890\n98765"
+    height=250
 )
-
 
 # --- Botão para iniciar o processamento ---
 if st.button("🚀 Iniciar Processamento", type="primary"):
@@ -158,18 +165,40 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                 amanha = datetime.now() + timedelta(days=1)
                 amanha_str = amanha.strftime("%d/%m/%Y")
 
-                chrome_options = Options()
-                chrome_options.add_argument("--headless")  # Roda o Chrome em modo headless (sem interface gráfica)
-                chrome_options.add_argument("--no-sandbox")  # Necessário para rodar como root em ambientes de container
-                chrome_options.add_argument("--disable-dev-shm-usage") # Medida de estabilidade em containers
-                chrome_options.add_argument("--disable-gpu") # Desabilita a GPU, já que não há uma no servidor
-                chrome_options.add_argument("window-size=1920,1080") # Define um tamanho de janela para evitar problemas de layout
-                chrome_options.add_argument("--ignore-certificate-errors")
+                # Verifica se o Chrome e o ChromeDriver estão no caminho especificado
+                user_home = os.path.expanduser('~') # Pega o diretório home do usuário (C:\Users\XXXXX)
+                custom_chrome_path = os.path.join(user_home, 'Downloads', 'chrome-win64', 'chrome.exe')
+                custom_driver_path = os.path.join(user_home, 'Downloads', 'chromedriver-win64', 'chromedriver.exe')
+                
+                st.info("Verificando configuração do Chrome...")
 
-                service = webdriver.chrome.service.Service(executable_path="/usr/bin/chromedriver")
+                # chrome_options = Options()
+                # chrome_options.add_argument("--headless")  # Roda o Chrome em modo headless (sem interface gráfica)
+                # chrome_options.add_argument("--no-sandbox")  # Necessário para rodar como root em ambientes de container
+                # chrome_options.add_argument("--disable-dev-shm-usage") # Medida de estabilidade em containers
+                # chrome_options.add_argument("--disable-gpu") # Desabilita a GPU, já que não há uma no servidor
+                # chrome_options.add_argument("window-size=1920,1080") # Define um tamanho de janela para evitar problemas de layout
+                # chrome_options.add_argument("--ignore-certificate-errors")
+
+                if os.path.exists(custom_chrome_path) and os.path.exists(custom_driver_path):
+                    st.success("Versão personalizada do Chrome encontrada. Usando caminhos específicos.")
+                    
+                    # Aponta o chromedriver personalizado
+                    service = Service(executable_path=custom_driver_path)
+
+                    # Aponta o chrome.exe personalizado
+                    options = Options()
+                    options.binary_location = custom_chrome_path
+
+                    # Inicializa o driver com os caminhos personalizados
+                    driver = webdriver.Chrome(service=service, options=options)
+                else:
+                    st.success("Usando a instalação padrão do Chrome (gerenciada automaticamente).")
+                    
+                    # O Selenium Manager cuida de tudo
+                    driver = webdriver.Chrome()
 
                 with st.spinner("Abrindo navegador e fazendo login..."):
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
                     driver.get("http://172.16.102.245:8082/hemera/hemera.jsp")
                     login(driver, inputUsuario, inputSenha, Tesp)
                     sleep(2)
@@ -195,25 +224,25 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                     WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[5]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr/td[3]/div/div"))).click()
                     sleep(1)
 
-                    # Clica no campo do Lote
-                    WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/div[3]/div/input"))).click()
-                    # Digita o Lote
-                    inputEmpresa = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")))
-                    inputEmpresa.send_keys(str(lote))
-                    sleep(1)
-                    # Clica em Pesquisar
-                    WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button"))).click()
-                    sleep(1)
-                    # Clica no Lote
-                    WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, f"//div[text()='{str(lote)}']"))).click()
-                    sleep(1)
-
-                    # Preenche a data final da leitura como hoje+1
-                    data_final = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/fieldset/div[3]/div/div/input")))
-                    data_final.clear()
-                    sleep(1)
-                    data_final.send_keys(amanha_str)
-                    sleep(1)
+                    if cliente == "Grupo B":
+                        # Clica no campo do Lote
+                        WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/div[3]/div/input"))).click()
+                        # Digita o Lote
+                        inputEmpresa = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")))
+                        inputEmpresa.send_keys(str(lote))
+                        sleep(1)
+                        # Clica em Pesquisar
+                        WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button"))).click()
+                        sleep(1)
+                        # Clica no Lote
+                        WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, f"//div[text()='{str(lote)}']"))).click()
+                        sleep(1)
+                        # Preenche a data final da leitura como hoje+1
+                        data_final = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/fieldset/div[3]/div/div/input")))
+                        data_final.clear()
+                        sleep(1)
+                        data_final.send_keys(amanha_str)
+                        sleep(1)
 
                     # Seleciona a opção "Pendente de Aprovação"
                     lista_situacao = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[2]/div[7]/div/div/input[2]")
