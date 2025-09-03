@@ -10,10 +10,10 @@ st.set_page_config(
 
 import streamlit as st
 
-st.logo(
-    "CRITCOM.svg",
-    icon_image="CRITCOM.svg",
-)
+# st.logo(
+#     "CRITCOM.svg",
+#     icon_image="CRITCOM.svg",
+# )
 
 #st.write("# App para cálculo para confirmações da crítica do faturamento")
 
