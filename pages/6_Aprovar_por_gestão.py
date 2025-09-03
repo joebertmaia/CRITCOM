@@ -12,7 +12,9 @@ from datetime import datetime, timedelta
 import os
 
 # --- Configurações da Página do Streamlit ---
-st.set_page_config(page_title="Automação Hemera", layout="wide")
+st.set_page_config(page_title="Automação Hemera", layout="wide",
+    menu_items={
+        'About': "Versão 1.0. Feito por Marcos, Ruben e Joébert."})
 st.title("Automação de Aprovação por Gestão no Hemera")
 st.markdown("---")
 
