@@ -106,6 +106,8 @@ with col1:
     
     if cliente == "Grupo B":
         lote = st.number_input("Insira o número do Lote:", min_value=1, step=1)
+    else:
+        lote = 1 # Valor fixo para Cliente livre
 
 with col2:
     inputUsuario = st.text_input("Usuário do Hemera:")
