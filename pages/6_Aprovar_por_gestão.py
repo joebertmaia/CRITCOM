@@ -106,8 +106,10 @@ with col1:
     
     if cliente == "Grupo B":
         lote = st.number_input("Insira o número do Lote:", min_value=1, step=1)
+        seta = 2 # Quantidade de vezes necessária para descer a seta até "Pendente de Aprovação"
     else:
         lote = 1 # Valor fixo para Cliente livre
+        seta = 3 # Quantidade de vezes necessária para descer a seta até "Pendente de Aprovação"
 
 with col2:
     inputUsuario = st.text_input("Usuário do Hemera:")
@@ -174,13 +176,13 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                 
                 st.info("Verificando configuração do Chrome...")
 
-                # chrome_options = Options()
-                # chrome_options.add_argument("--headless")  # Roda o Chrome em modo headless (sem interface gráfica)
-                # chrome_options.add_argument("--no-sandbox")  # Necessário para rodar como root em ambientes de container
-                # chrome_options.add_argument("--disable-dev-shm-usage") # Medida de estabilidade em containers
-                # chrome_options.add_argument("--disable-gpu") # Desabilita a GPU, já que não há uma no servidor
-                # chrome_options.add_argument("window-size=1920,1080") # Define um tamanho de janela para evitar problemas de layout
-                # chrome_options.add_argument("--ignore-certificate-errors")
+                chrome_options = Options()
+                chrome_options.add_argument("--headless")  # Roda o Chrome em modo headless (sem interface gráfica)
+                chrome_options.add_argument("--no-sandbox")  # Necessário para rodar como root em ambientes de container
+                chrome_options.add_argument("--disable-dev-shm-usage") # Medida de estabilidade em containers
+                chrome_options.add_argument("--disable-gpu") # Desabilita a GPU, já que não há uma no servidor
+                chrome_options.add_argument("window-size=1920,1080") # Define um tamanho de janela para evitar problemas de layout
+                chrome_options.add_argument("--ignore-certificate-errors")
 
                 if os.path.exists(custom_chrome_path) and os.path.exists(custom_driver_path):
                     st.success("Versão personalizada do Chrome encontrada. Usando caminhos específicos.")
@@ -227,26 +229,61 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                     sleep(1)
 
                     if cliente == "Grupo B":
-                        # Clica no campo do Lote
+                        # Clica no campo para abrir a busca de Lote
                         inputLote = WebDriverWait(driver, Tesp).until(
                                 EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/div[3]/div/input"))
                         ).click()
                         sleep(1)
-                        # Digita o Lote
-                        inputLote = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input")
-                        inputLote.send_keys(lote)
+                        # Aguarda o campo de texto do lote aparecer, digita o número e pesquisa
+                        input_pesquisa_lote = WebDriverWait(driver, Tesp).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[1]/fieldset/div[1]/div/input"))
+                        )
+                        input_pesquisa_lote.send_keys(str(lote))
                         sleep(1)
                         # Clicar em pesquisar o lote
                         inputLote = driver.find_element(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[7]/div[2]/div/div[2]/div/div[1]/form/div[2]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/em/button").click()
-                        sleep(1)
-                        # Esperar a lista de lotes ficar disponível para seleção
-                        inputLote = WebDriverWait(driver, Tesp).until(
-                                EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[6]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr[1]/td[3]/div/div"))
-                        )
-                        lotes = driver.find_elements(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[6]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr")
-                        for el in lotes:
-                            if el.get_property("innerText").startswith(lote + " -"):
-                                el.click()
+                        # Loop principal de paginação
+                        while True:
+                            # Flag para controlar se lote foi encontrado na página atual
+                            lote_encontrado_na_pagina = False
+                            WebDriverWait(driver, Tesp).until(
+                                EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[6]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr"))
+                            )
+                            sleep(1)
+
+                            linhas_lotes = driver.find_elements(By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[6]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[4]/div[2]/table/tbody/tr")
+                            
+                            # Procura o lote na lista da página atual
+                            for linha in linhas_lotes:
+                                if linha.text.strip().startswith(str(lote) + " -"):
+                                    st.success(f"Lote {lote} encontrado! Clicando...")
+                                    linha.click()
+                                    lote_encontrado_na_pagina = True
+                                    break # Sai do loop 'for' pois já encontramos
+
+                            # Se o lote foi encontrado, podemos sair do loop principal 'while'
+                            if lote_encontrado_na_pagina:
+                                break
+
+                            # Se o lote NÃO foi encontrado na página atual, tenta ir para a próxima
+                            try:
+                                xpath_proxima_pagina = "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[6]/div[2]/div/div[2]/div/div[2]/div/div[1]/div[1]/div/table/tbody/tr/td[8]/table/tbody/tr/td[2]/em/button"
+                                
+                                botao_proxima_pagina = WebDriverWait(driver, 10).until(
+                                    EC.element_to_be_clickable((By.XPATH, xpath_proxima_pagina))
+                                )
+                                st.warning("Lote não encontrado nesta página. Procurando na próxima...")
+                                botao_proxima_pagina.click()
+                                
+                                # Espera um pouco para a nova página carregar
+                                sleep(2)
+
+                            except Exception as e:
+                                st.warning(f"Não foi possível encontrar o botão 'Próxima Página' ou ele está desabilitado. Fim da busca pelo lote {lote}.")
+                                st.warning(f"O lote {lote} não foi encontrado em nenhuma das páginas.")
+                                break # Sai do loop 'while' porque não há mais páginas
+
+                            sleep(1) # Pausa final após encontrar e clicar ou terminar a busca
 
                         # Preenche a data final da leitura como hoje+1
                         data_final = WebDriverWait(driver, Tesp).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/table/tbody/tr[2]/td[2]/div[2]/div[2]/div/div/div[1]/form/div[1]/fieldset/div[1]/fieldset/div[3]/div/div/input")))
@@ -260,7 +297,7 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                     lista_situacao.click()
                     sleep(1)
 
-                    for i in range(2):
+                    for i in range(seta):
                         lista_situacao.send_keys(Keys.ARROW_DOWN)
                         sleep(0.5)
                     lista_situacao.send_keys(Keys.ENTER)
@@ -277,7 +314,7 @@ if st.button("🚀 Iniciar Processamento", type="primary"):
                         automacao(driver, uc_processar, Tesp)
                         df_resultado.loc[i, 'Status'] = "✅ Processado"
                     except Exception as e:
-                        st.warning(f"Falha ao processar a UC {uc_display}. Erro: {e}")
+                        st.warning(f"Falha ao processar a UC {uc_display}. Verifique manualmente.")
                         df_resultado.loc[i, 'Status'] = "❌ Falha"
                     
                     # Atualiza a UI
