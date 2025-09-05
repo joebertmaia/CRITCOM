@@ -24,6 +24,9 @@ st.markdown("""<style>[aria-label="dialog"]{width: 90%;}</style>""", unsafe_allo
 
 st.sidebar.success("Selecione uma opção.")
 
+st.write("Essa versão será descontinuada dentro de uma semana, no dia 12/09/2025.")
+st.write("Favor adotar a versão 2.0 do CRITCOM que será disponibilizada dentro do SICOM.")
+
 footer="""<style>
 
 .footer {
